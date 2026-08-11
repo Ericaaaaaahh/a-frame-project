@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Stepping Stone Text Gallery - Fixed Collision</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <style>
+    #ui-container {
+      position: absolute; top: 20px; left: 20px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.95); padding: 15px;
+      border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      width: 320px; font-family: sans-serif;
+    }
+    textarea { width: 100%; height: 100px; margin-bottom: 10px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; line-height: 1.4; }
+    button { width: 100%; padding: 12px; background: #111; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #333; }
+  </style>
+
+  <!-- ★ 완벽 작동 보장: 실시간 좌표 강제 차단 스크립트 -->
+  <script>
+    AFRAME.registerComponent('wall-collider', {
+      init: function () {
+        this.playerRadius = 0.6; // 플레이어 충돌 반경 (60cm)
+      },
+      tick: function () {
+        const playerPos = this.el.object3D.position;
+        const walls = document.querySelectorAll('.solid-wall');
+        
+        walls.forEach(wall => {
+          const mesh = wall.getObject3D('mesh');
+          if (!mesh) return;
+
+          // 벽의 실제 위치와 크기 계산
+          const box = new THREE.Box3().setFromObject(mesh);
+          
+          // 플레이어 위치 기준으로 가장 가까운 벽 위의 점 찾기
+          const closestPoint = new THREE.Vector3();
+          box.clampPoint(playerPos, closestPoint);
+          
+          // 벽과 플레이어 사이의 거리 계산
+          const distance = playerPos.distanceTo(closestPoint);
+          
+          // 플레이어가 벽 안으로 파고들었거나 너무 가까워지면 강제로 바깥으로 밀어냄!
+          if (distance < this.playerRadius) {
+            const overlap = this.playerRadius - distance;
+            const pushDir = new THREE.Vector3().subVectors(playerPos, closestPoint);
+            
+            // Y축(높이) 이동은 방지하고 X, Z평면으로만 밀어냄
+            pushDir.y = 0; 
+            if (pushDir.lengthSq() === 0) {
+              pushDir.set(0, 0, 1); // 예외 처리
+            } else {
+              pushDir.normalize();
+            }
+            
+            // 플레이어 좌표 강제 이동
+            playerPos.add(pushDir.multiplyScalar(overlap));
+          }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+
+  <div id="ui-container">
+    <h3 style="margin: 0 0 10px 0; color: #111;">징검다리 텍스트 갤러리</h3>
+    <textarea id="textInput">In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since. "Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven't had the advantages that you've had."</textarea>
+    <button id="generateBtn">직진형 갤러리 생성</button>
+  </div>
+
+  <a-scene>
+    <!-- 어두운 밤하늘과 진회색 갤러리 바닥 -->
+    <a-sky color="#030305"></a-sky>
+    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#1a1a1a" material="roughness: 0.8"></a-plane>
+    <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+
+    <a-entity id="gallery-container"></a-entity>
+
+    <!-- ★ 물리 충돌 보장 카메라 구조 (Rig + Camera) -->
+    <a-entity id="player" position="0 0 2" wall-collider>
+      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 60">
+        <a-cursor color="#777777"></a-cursor>
+      </a-camera>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const text = document.getElementById('textInput').value;
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = '';
+
+      const wallWidth = 5.5;     
+      const wallThickness = 0.2; // 벽 충돌 감지를 위해 두께를 20cm로 보강
+      const zSpacing = 5;        
+      const offset = 2.2; 
+
+      sentences.forEach((sentence, i) => {
+        const curX = (i % 2 === 0) ? -offset : offset;
+        const curZ = -3 - (i * zSpacing); 
+
+        const wallGroup = document.createElement('a-entity');
+        wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
+        wallGroup.setAttribute('rotation', `0 0 0`);
+
+        const wall = document.createElement('a-box');
+        wall.setAttribute('width', wallWidth);
+        wall.setAttribute('height', '3.5');
+        wall.setAttribute('depth', wallThickness);
+        wall.setAttribute('color', '#ffffff');
+        wall.setAttribute('material', 'roughness: 0.95');
+        // ★ 충돌 감지 대상 이름표
+        wall.setAttribute('class', 'solid-wall'); 
+
+        const textEl = document.createElement('a-text');
+        textEl.setAttribute('value', sentence.trim());
+        textEl.setAttribute('align', 'center');
+        textEl.setAttribute('width', '5.5');
+        textEl.setAttribute('wrap-count', '35');
+        textEl.setAttribute('position', `0 0 ${wallThickness/2 + 0.15}`); 
+        textEl.setAttribute('color', '#000000'); 
+        
+        const light = document.createElement('a-light');
+        light.setAttribute('type', 'point');
+        light.setAttribute('color', '#ffffff');
+        light.setAttribute('intensity', '0.7');
+        light.setAttribute('distance', '6');
+        light.setAttribute('position', '0 1 2'); 
+        
+        wallGroup.appendChild(wall);
+        wallGroup.appendChild(textEl);
+        wallGroup.appendChild(light);
+        
+        container.appendChild(wallGroup);
+      });
+    });
+  </script>
+</body>
+</html>

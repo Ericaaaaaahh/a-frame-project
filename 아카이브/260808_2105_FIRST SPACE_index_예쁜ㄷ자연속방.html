@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Enfilade Text Gallery</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <style>
+    #ui-container {
+      position: absolute; top: 20px; left: 20px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.95); padding: 15px;
+      border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      width: 320px; font-family: sans-serif;
+    }
+    textarea { width: 100%; height: 85px; margin-bottom: 10px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { width: 100%; padding: 12px; background: #111; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #333; }
+  </style>
+
+  <!-- ★ 100% 벽 통과 방지 자체 스크립트 -->
+  <script>
+    AFRAME.registerComponent('prevent-pass-through', {
+      tick: function () {
+        const pos = this.el.object3D.position;
+        const radius = 0.45; // 통과하기 쉽게 몸통 크기를 아주 살짝(45cm) 줄였습니다
+        const walls = document.querySelectorAll('.solid-wall');
+        
+        walls.forEach(wall => {
+          const mesh = wall.getObject3D('mesh');
+          if (!mesh) return;
+          const box = new THREE.Box3().setFromObject(mesh);
+          const sphere = new THREE.Sphere(pos, radius);
+          
+          if (box.intersectsSphere(sphere)) {
+            const closestPoint = new THREE.Vector3();
+            box.clampPoint(pos, closestPoint);
+            const pushDirection = new THREE.Vector3().subVectors(pos, closestPoint).normalize();
+            pos.add(pushDirection.multiplyScalar(0.05)); 
+          }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+
+  <div id="ui-container">
+    <h3 style="margin: 0 0 10px 0; color: #111;">연속된 방(Enfilade) 갤러리</h3>
+    <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
+    <button id="generateBtn">오른쪽으로 뚫린 갤러리 생성</button>
+  </div>
+
+  <a-scene>
+    <!-- 어두운 밤하늘과 진회색 갤러리 바닥 -->
+    <a-sky color="#050508"></a-sky>
+    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#1a1a1a" material="roughness: 0.8"></a-plane>
+    <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+
+    <a-entity id="gallery-container"></a-entity>
+
+    <!-- 처음 시작할 때 복도에서 방을 정면으로 바라보도록 배치 (Z = 2) -->
+    <a-camera position="0 1.6 2" prevent-pass-through>
+      <a-cursor color="#555555"></a-cursor>
+    </a-camera>
+  </a-scene>
+
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const text = document.getElementById('textInput').value;
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = '';
+
+      const boothWidth = 6;      
+      const boothDepth = 4;      
+      const wallThickness = 0.1; // [요청 반영] 얇고 세련된 10cm 벽 두께!
+      
+      // 벽 세우기 도우미 함수 (x, y, z, 회전, 넓이, 높이)
+      function createWall(x, y, z, rotY, w, h) {
+        const wall = document.createElement('a-box');
+        wall.setAttribute('position', `${x} ${y} ${z}`);
+        wall.setAttribute('rotation', `0 ${rotY} 0`);
+        wall.setAttribute('width', w);
+        wall.setAttribute('height', h);
+        wall.setAttribute('depth', wallThickness);
+        wall.setAttribute('color', '#ffffff');
+        wall.setAttribute('material', 'roughness: 0.95');
+        wall.setAttribute('class', 'solid-wall'); 
+        container.appendChild(wall);
+        return wall;
+      }
+
+      sentences.forEach((sentence, i) => {
+        const curX = i * boothWidth;
+
+        // 1. 메인 텍스트가 걸리는 뒷벽 (디귿자의 안쪽 벽)
+        const backWall = createWall(curX, 1.75, -4, 0, boothWidth, 3.5);
+
+        // 2. 텍스트와 핀 조명 부착
+        const textEl = document.createElement('a-text');
+        textEl.setAttribute('value', sentence.trim());
+        textEl.setAttribute('align', 'center');
+        textEl.setAttribute('width', '5.5');
+        textEl.setAttribute('wrap-count', '32');
+        textEl.setAttribute('position', '0 -0.25 0.1'); // 입체감 있게 벽에서 띄움
+        textEl.setAttribute('color', '#000000'); 
+        
+        const light = document.createElement('a-light');
+        light.setAttribute('type', 'point');
+        light.setAttribute('color', '#ffffff');
+        light.setAttribute('intensity', '0.8');
+        light.setAttribute('distance', '5');
+        light.setAttribute('position', '0 1.5 2'); 
+        
+        backWall.appendChild(textEl);
+        backWall.appendChild(light);
+
+        // 3. 가장 첫 방의 왼쪽 막음 벽 세우기
+        if (i === 0) {
+          createWall(curX - (boothWidth/2), 1.75, -2, 90, boothDepth, 3.5);
+        }
+
+        // 4. [핵심] 다음 방으로 통하는 구멍(문)이 뚫린 오른쪽 파티션 벽 세우기!
+        const partitionX = curX + (boothWidth/2);
+        
+        // 만약 마지막 방이라면 구멍 없이 꽉 막힌 벽으로 마무리
+        if (i === sentences.length - 1) {
+          createWall(partitionX, 1.75, -2, 90, boothDepth, 3.5);
+        } else {
+          // [건축 로직] 오른쪽 벽을 3조각으로 쪼개서 문(구멍)을 만듭니다.
+          // 앞쪽 벽 (복도 쪽 벽)
+          createWall(partitionX, 1.75, -1.15, 90, 2.3, 3.5);
+          // 뒤쪽 기둥 (텍스트 바로 옆 기둥)
+          createWall(partitionX, 1.75, -3.9, 90, 0.2, 3.5);
+          // 문 위의 간판(Lintel) 부분 (구멍 위쪽 천장 부분 덮어주기)
+          createWall(partitionX, 3.0, -3.05, 90, 1.5, 1.0);
+        }
+      });
+
+      // 복도 반대편(등 뒤)을 막아주는 기나긴 갤러리 외곽 벽
+      const totalLength = sentences.length * boothWidth;
+      createWall((totalLength / 2) - (boothWidth / 2), 1.75, 4, 0, totalLength, 3.5);
+    });
+  </script>
+</body>
+</html>

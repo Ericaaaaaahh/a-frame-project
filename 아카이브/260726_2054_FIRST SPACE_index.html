@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Random Text Maze</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <style>
+    /* UI 디자인 (좌측 상단 입력창) */
+    #ui-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    textarea { 
+      width: 320px; 
+      height: 120px; 
+      margin-bottom: 10px; 
+      font-family: sans-serif;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button { 
+      width: 100%;
+      padding: 10px 15px; 
+      cursor: pointer; 
+      background: #333; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      font-weight: bold;
+      font-size: 16px;
+    }
+    button:hover { background: #555; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 텍스트 입력 UI -->
+  <div id="ui-container">
+    <h3 style="margin-top: 0;">문장 미로 생성기</h3>
+    <textarea id="textInput" placeholder="영어 텍스트를 입력하세요. (예: 영어 소설이나 에세이 등)"></textarea><br>
+    <button id="generateBtn">미로 만들기</button>
+  </div>
+
+  <!-- 2. A-Frame 3D 공간 -->
+  <a-scene>
+    <!-- 어두운 밤하늘 배경 -->
+    <a-sky color="#0d0d0d"></a-sky>
+    
+    <!-- 광활한 바닥 추가 (우주에 떠있는 느낌 방지) -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="200" height="200" color="#1a1a1a"></a-plane>
+    
+    <!-- 미로 벽들이 담길 빈 상자(그룹) -->
+    <a-entity id="maze-container"></a-entity>
+    
+    <!-- 플레이어 카메라 (눈높이 1.6m) -->
+    <a-camera position="0 1.6 0">
+      <a-cursor color="white"></a-cursor>
+    </a-camera>
+  </a-scene>
+
+  <!-- 3. 핵심 생성 알고리즘 -->
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const text = document.getElementById('textInput').value;
+      if (!text.trim()) return alert("텍스트를 입력해주세요!");
+
+      // 마침표, 느낌표, 물음표를 기준으로 문장 쪼개기
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      
+      const container = document.getElementById('maze-container');
+      container.innerHTML = ''; // 버튼을 다시 누르면 기존 미로 초기화
+
+      let currentX = 0;
+      let currentZ = -6; // 너무 코앞에 생성되지 않게 6미터 앞부터 시작
+      let currentDir = 0; // 0: 북, 1: 동, 2: 남, 3: 서
+      const stepSize = 6; // 벽 사이의 간격 (가로 크기가 6이므로 6미터 간격이 딱 맞음)
+
+      const visited = new Set();
+      visited.add(`0,0`); 
+      visited.add(`${currentX},${currentZ}`); 
+
+      sentences.forEach((sentence) => {
+        // --- 3D 벽 그룹 생성 ---
+        const wallGroup = document.createElement('a-entity');
+        // Y좌표를 1.5로 설정 (벽 높이가 3이므로, 밑바닥이 정확히 땅(0)에 닿음)
+        wallGroup.setAttribute('position', `${currentX} 1.5 ${currentZ}`);
+        
+        let rotY = 0;
+        if (currentDir === 0) rotY = 0;
+        else if (currentDir === 1) rotY = -90;
+        else if (currentDir === 2) rotY = 180;
+        else if (currentDir === 3) rotY = 90;
+        wallGroup.setAttribute('rotation', `0 ${rotY} 0`);
+
+        // 어두운 벽면 (높이 3m, 너비 6m)
+        const plane = document.createElement('a-plane');
+        plane.setAttribute('width', '6');
+        plane.setAttribute('height', '3');
+        plane.setAttribute('color', '#2b2b2b');
+
+        // 하얀색 텍스트
+        const textEl = document.createElement('a-text');
+        textEl.setAttribute('value', sentence.trim());
+        textEl.setAttribute('align', 'center');
+        textEl.setAttribute('width', '5.5'); 
+        textEl.setAttribute('wrap-count', '35'); // 텍스트가 더 크고 또렷하게 보이도록 줄바꿈 수치 조정
+        textEl.setAttribute('position', '0 0 0.05'); // Z-Fighting 방지 (5cm 튀어나옴)
+        
+        wallGroup.appendChild(plane);w
+        wallGroup.appendChild(textEl);
+        container.appendChild(wallGroup);
+
+        // --- 다음 경로 계산 (충돌 방지) ---
+        const possibleTurns = [0, 1, -1]; 
+        const validMoves = [];
+
+        possibleTurns.forEach(turn => {
+          const nextDir = (currentDir + turn + 4) % 4; 
+          let nx = currentX;
+          let nz = currentZ;
+
+          if (nextDir === 0) nz -= stepSize;
+          else if (nextDir === 1) nx += stepSize;
+          else if (nextDir === 2) nz += stepSize;
+          else if (nextDir === 3) nx -= stepSize;
+
+          if (!visited.has(`${nx},${nz}`)) {
+            validMoves.push({ dir: nextDir, x: nx, z: nz });
+          }
+        });
+
+        // 길 선택 및 예외 처리
+        if (validMoves.length > 0) {
+          const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+          currentDir = randomMove.dir;
+          currentX = randomMove.x;
+          currentZ = randomMove.z;
+        } else {
+          // 막혔을 경우 강제 직진
+          if (currentDir === 0) currentZ -= stepSize;
+          else if (currentDir === 1) currentX += stepSize;
+          else if (currentDir === 2) currentZ += stepSize;
+          else if (currentDir === 3) currentX -= stepSize;
+        }
+        visited.add(`${currentX},${currentZ}`);
+      });
+    });
+  </script>
+</body>
+</html>
