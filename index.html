@@ -1,15 +1,17 @@
-<!DOCTYPE html>
+ㅍ<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Text Gallery - 오리지널 물리 엔진</title>
+  <title>Text Gallery - 오리지널 황금 물리 엔진</title>
   
-  <!-- 1. A-Frame 최신 코어 -->
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <!-- 2. aframe-extras (이동 제어) -->
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.3.0/dist/aframe-extras.min.js"></script>
-  <!-- 3. aframe-physics-system (표준 물리 엔진) -->
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.min.js"></script>
+  <!-- 1. A-Frame 코어 (안정적인 1.4.0) -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  
+  <!-- ★ 2. aframe-extras (중요: kinematic-body가 살아있는 마지막 버전 6.1.1 사용!) -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  
+  <!-- 3. 물리 엔진 (4.2.2 버전) -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.2.2/dist/aframe-physics-system.min.js"></script>
   
   <style>
     #ui-container {
@@ -31,26 +33,26 @@
     <button id="generateBtn">갤러리 생성하기</button>
   </div>
 
-  <!-- ★ 물리 엔진 On! (debug: true로 초록색 선 확인 가능) -->
+  <!-- debug: true를 켜두었습니다. 벽과 내 몸에 모두 '초록색 선'이 생기는지 확인하세요! -->
   <a-scene physics="gravity: -9.8; debug: true">
     <a-sky color="#050508"></a-sky>
     
-    <!-- 바닥: static-body -->
+    <!-- 바닥: 떨어지지 않게 static-body -->
     <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#2b2b2b" material="roughness: 0.8" static-body></a-plane>
     <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 물리 엔진의 핵심: Rig(몸통)에 kinematic-body 장착 -->
+    <!-- ★ 부활한 진짜 물리 엔진 몸통! (kinematic-body가 정상 작동합니다) -->
     <a-entity id="rig" 
               movement-controls="speed: 0.15" 
               kinematic-body="radius: 0.5; height: 1.6"
               position="0 0 0">
       
-      <!-- 내 몸통 시각화 (물리 속성 절대 금지) -->
+      <!-- 내 몸 시각화 (물리 속성 안 넣음) -->
       <a-sphere position="0 0.8 0" radius="0.5" color="red" opacity="0.5" material="side: double;" transparent="true"></a-sphere>
 
-      <!-- ★ 카메라(눈) 분리: 아이패드 시점 빙글빙글 도는 거 방지 설정 추가 -->
+      <!-- 아이패드 시점 오류 방지용 옵션 유지 -->
       <a-entity camera position="0 1.6 0" look-controls="magicWindowTrackingEnabled: false">
         <a-cursor color="#000000"></a-cursor>
       </a-entity>
@@ -85,7 +87,7 @@
         box.setAttribute('color', '#ffffff');
         box.setAttribute('material', 'roughness: 0.9');
         
-        // ★ 물리 엔진의 핵심: 벽에 static-body 장착
+        // ★ 벽을 물리 장애물로 만듭니다
         box.setAttribute('static-body', '');
 
         const textEl = document.createElement('a-text');
