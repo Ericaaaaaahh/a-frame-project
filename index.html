@@ -2,9 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Text Gallery - 순수 좌표 계산 충돌 방지</title>
-  <!-- 오직 A-Frame 기본 코어 하나만 있으면 됩니다! -->
+  <title>Text Gallery - 오리지널 물리 엔진</title>
+  
+  <!-- 1. A-Frame 최신 코어 -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- 2. aframe-extras (이동 제어) -->
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.3.0/dist/aframe-extras.min.js"></script>
+  <!-- 3. aframe-physics-system (표준 물리 엔진) -->
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.min.js"></script>
   
   <style>
     #ui-container {
@@ -17,58 +22,6 @@
     button { width: 100%; padding: 12px; background: #222; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
     button:hover { background: #444; }
   </style>
-
-  <!-- ★ 100% 자체 개발: 수학 좌표 기반 벽 충돌 방지 시스템 ★ -->
-  <script>
-    AFRAME.registerComponent('simple-wall-collider', {
-      schema: {
-        radius: { default: 0.5 } // 내 몸(원기둥)의 반지름 (50cm)
-      },
-      tick: function () {
-        // 1. 현재 내 카메라의 절대 좌표(World Position) 가져오기
-        const myPos = new THREE.Vector3();
-        this.el.object3D.getWorldPosition(myPos);
-        
-        // 2. 씬 안에 있는 '.solid-wall' 이름이 붙은 모든 벽 가져오기
-        const walls = document.querySelectorAll('.solid-wall');
-        
-        walls.forEach(wall => {
-          const mesh = wall.getObject3D('mesh');
-          if (!mesh) return;
-          
-          // 3. 벽의 정확한 3D 입체 영역(Bounding Box) 계산
-          const box = new THREE.Box3().setFromObject(mesh);
-          
-          // 4. 벽 영역 중에서 '내 위치와 가장 가까운 점' 찾기
-          const closestPoint = new THREE.Vector3();
-          box.clampPoint(myPos, closestPoint);
-          
-          // 5. 내 위치와 벽에서 가장 가까운 점 사이의 거리 계산
-          const distance = myPos.distanceTo(closestPoint);
-          
-          // ★ 6. 핵심: 내 몸통 반지름(0.5m)보다 거리가 가깝다면? = 벽에 파고들었다!
-          if (distance < this.data.radius) {
-            // 어느 방향으로 밀어낼지 계산 (내 위치 - 벽의 점)
-            const pushDir = new THREE.Vector3().subVectors(myPos, closestPoint);
-            
-            // ★ 중요: 하늘로 날아가지 않게 위아래(Y축) 밀림은 0으로 잠금!
-            pushDir.y = 0; 
-            
-            // 방향을 1의 길이를 가진 정규 벡터로 변환
-            if (pushDir.lengthSq() === 0) {
-              pushDir.set(0, 0, 1); // 혹시 벽 완벽히 정중앙에 끼면 뒤로 밀기
-            } else {
-              pushDir.normalize();
-            }
-            
-            // ★ 100% 방어의 비밀: 파고든 깊이 + 0.1cm(0.001)만큼 강제로 바깥으로 밀어냄!
-            const penetrationDepth = (this.data.radius - distance) + 0.001;
-            this.el.object3D.position.add(pushDir.multiplyScalar(penetrationDepth));
-          }
-        });
-      }
-    });
-  </script>
 </head>
 <body>
 
@@ -78,25 +31,31 @@
     <button id="generateBtn">갤러리 생성하기</button>
   </div>
 
-  <a-scene>
+  <!-- ★ 물리 엔진 On! (debug: true로 초록색 선 확인 가능) -->
+  <a-scene physics="gravity: -9.8; debug: true">
     <a-sky color="#050508"></a-sky>
-    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#2b2b2b" material="roughness: 0.8"></a-plane>
+    
+    <!-- 바닥: static-body -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#2b2b2b" material="roughness: 0.8" static-body></a-plane>
     <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 카메라에 우리가 만든 수학 충돌 방패(simple-wall-collider) 장착! -->
-    <!-- wasd-controls="acceleration: 20"으로 걷는 속도도 쾌적하게 조절했습니다 -->
-    <a-camera position="0 1.6 0" 
-              wasd-controls="acceleration: 20" 
-              look-controls 
-              simple-wall-collider="radius: 0.5">
+    <!-- ★ 물리 엔진의 핵심: Rig(몸통)에 kinematic-body 장착 -->
+    <a-entity id="rig" 
+              movement-controls="speed: 0.15" 
+              kinematic-body="radius: 0.5; height: 1.6"
+              position="0 0 0">
       
-      <!-- 내 몸통의 크기(반지름 0.5)를 눈으로 확인하는 반투명 빨간 구 -->
-      <a-sphere position="0 -0.8 0" radius="0.5" color="red" opacity="0.5" transparent="true"></a-sphere>
+      <!-- 내 몸통 시각화 (물리 속성 절대 금지) -->
+      <a-sphere position="0 0.8 0" radius="0.5" color="red" opacity="0.5" material="side: double;" transparent="true"></a-sphere>
+
+      <!-- ★ 카메라(눈) 분리: 아이패드 시점 빙글빙글 도는 거 방지 설정 추가 -->
+      <a-entity camera position="0 1.6 0" look-controls="magicWindowTrackingEnabled: false">
+        <a-cursor color="#000000"></a-cursor>
+      </a-entity>
       
-      <a-cursor color="#000000"></a-cursor>
-    </a-camera>
+    </a-entity>
   </a-scene>
 
   <script>
@@ -126,8 +85,8 @@
         box.setAttribute('color', '#ffffff');
         box.setAttribute('material', 'roughness: 0.9');
         
-        // ★ 스크립트가 인식할 수 있게 클래스 이름표 붙이기
-        box.setAttribute('class', 'solid-wall');
+        // ★ 물리 엔진의 핵심: 벽에 static-body 장착
+        box.setAttribute('static-body', '');
 
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', sentence.trim());
@@ -150,13 +109,9 @@
         container.appendChild(wallGroup);
 
         if (curDir === 0) {
-          curX += H;       
-          curZ -= H;       
-          curDir = 1;      
+          curX += H; curZ -= H; curDir = 1;      
         } else {
-          curX += H;       
-          curZ -= H;       
-          curDir = 0;      
+          curX += H; curZ -= H; curDir = 0;      
         }
       });
     });
