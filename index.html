@@ -7,30 +7,30 @@
   <style>
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
-      background: rgba(15, 16, 21, 0.9); padding: 18px;
+      background: rgba(18, 20, 28, 0.92); padding: 18px;
       border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      width: 330px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.15);
+      width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(197, 160, 89, 0.3);
       color: #e2d9c8;
     }
     textarea { 
-      width: 100%; height: 95px; margin-bottom: 12px; padding: 10px; 
+      width: 100%; height: 90px; margin-bottom: 12px; padding: 10px; 
       box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
-      border-radius: 6px; line-height: 1.4; background: #08090d; color: #fff;
+      border-radius: 6px; line-height: 1.4; background: #0c0d12; color: #fff;
       font-family: inherit; font-size: 13px;
     }
     button { 
-      width: 100%; padding: 12px; background: #c5a059; color: #000; 
+      width: 100%; padding: 12px; background: #c5a059; color: #0c0d12; 
       border: none; border-radius: 6px; font-weight: bold; font-size: 14px; 
       cursor: pointer; transition: 0.2s; letter-spacing: 1px;
     }
-    button:hover { background: #dfb96c; }
+    button:hover { background: #e0b86c; }
   </style>
 
-  <!-- ★ 벽 통과 방지 물리 충돌 스크립트 -->
+  <!-- ★ 완벽 작동: 실시간 2D 평면 충돌 강제 차단 스크립트 -->
   <script>
     AFRAME.registerComponent('wall-collider', {
       init: function () {
-        this.playerRadius = 0.5;
+        this.playerRadius = 0.6;
       },
       tick: function () {
         const playerPos = this.el.object3D.position;
@@ -41,14 +41,17 @@
           if (!mesh) return;
 
           const box = new THREE.Box3().setFromObject(mesh);
+          
+          // 높이(Y)는 무시하고 수평(X, Z) 거리만으로 충돌 체크
           const closestPoint = new THREE.Vector3();
           box.clampPoint(playerPos, closestPoint);
-          const distance = playerPos.distanceTo(closestPoint);
+          closestPoint.y = playerPos.y; 
+
+          const dist = Math.hypot(playerPos.x - closestPoint.x, playerPos.z - closestPoint.z);
           
-          if (distance < this.playerRadius) {
-            const overlap = this.playerRadius - distance;
-            const pushDir = new THREE.Vector3().subVectors(playerPos, closestPoint);
-            pushDir.y = 0; 
+          if (dist < this.playerRadius) {
+            const overlap = this.playerRadius - dist;
+            const pushDir = new THREE.Vector3(playerPos.x - closestPoint.x, 0, playerPos.z - closestPoint.z);
             if (pushDir.lengthSq() === 0) {
               pushDir.set(0, 0, 1);
             } else {
@@ -66,118 +69,119 @@
   <div id="ui-container">
     <h3 style="margin: 0 0 10px 0; color: #c5a059; letter-spacing: 1px;">THE GRAND ROTUNDA</h3>
     <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
-    <button id="generateBtn">웅장한 나선형 건축 생성</button>
+    <button id="generateBtn">새로운 나선형 건축 생성</button>
   </div>
 
   <a-scene>
-    <!-- 고요하고 깊은 밤하늘 -->
-    <a-sky color="#030407"></a-sky>
+    <!-- 고급스러운 갤러리 배경색 -->
+    <a-sky color="#0d0f17"></a-sky>
 
-    <!-- 중앙 상단 웅장한 돔 천장 조명 (Cathedral Skylight) -->
-    <a-light type="directional" color="#f5e8d0" intensity="0.5" position="0 50 0"></a-light>
-    <a-light type="ambient" color="#ffffff" intensity="0.25"></a-light>
+    <!-- ★ 전체를 은은하고 밝게 밝혀주는 갤러리 조명 셋업 -->
+    <a-light type="ambient" color="#ffffff" intensity="0.75"></a-light>
+    <a-light type="directional" color="#fcebd2" intensity="0.6" position="5 30 10"></a-light>
 
-    <!-- 거대한 최하단 대리석 바닥 -->
-    <a-cylinder position="0 -60 0" radius="35" height="1" color="#121318" material="roughness: 0.7"></a-cylinder>
+    <!-- 바닥 베이스 -->
+    <a-cylinder position="0 -30 0" radius="30" height="1" color="#151722" material="roughness: 0.8"></a-cylinder>
 
-    <!-- 중앙을 관통하는 거대한 원형 기둥 (Monumental Core Column) -->
-    <a-cylinder position="0 0 0" radius="2.5" height="120" color="#181a20" material="roughness: 0.95"></a-cylinder>
+    <!-- 중앙을 관통하는 웅장한 대리석 원형 기둥 -->
+    <a-cylinder position="0 0 0" radius="3" height="80" color="#1c1f2e" material="roughness: 0.9"></a-cylinder>
 
-    <!-- 갤러리 건축 오브젝트들이 동적으로 추가되는 컨테이너 -->
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 플레이어 초기 카메라 (최상층 웅장한 계단 입구) -->
-    <a-entity id="player" position="0 0 14" wall-collider>
-      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 70">
+    <!-- 첫 번째 벽 정면 3미터 앞에 플레이어 카메라 배치 -->
+    <a-entity id="player" position="0 0 7" wall-collider>
+      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 50">
         <a-cursor color="#c5a059"></a-cursor>
       </a-camera>
     </a-entity>
   </a-scene>
 
   <script>
-    document.getElementById('generateBtn').addEventListener('click', () => {
+    function buildGallery() {
       const text = document.getElementById('textInput').value;
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
       container.innerHTML = '';
 
-      const radius = 12;       // 웅장한 크기를 위해 반경을 12m로 확장
-      const angleStep = 36;    // 한 문장당 36도씩 완만하게 회전 (10문장에 360도 1회전)
-      const heightStep = 2.0;  // 웅장한 층고 낙차 (문장당 2m 하강)
-      const wallWidth = 7.0;   // 장엄한 와이드 전면 벽
-      const wallThickness = 0.3;
+      const radius = 10;       // 나선 반경 (10m)
+      const angleStep = 40;    // 한 문장당 40도 회전
+      const heightStep = 1.6;  // 완만하고 웅장한 층고 하강 (1.6m)
+      const wallWidth = 6.0;
+      const wallThickness = 0.25;
 
       sentences.forEach((sentence, i) => {
-        const currentAngle = i * angleStep;
-        const rad = (currentAngle * Math.PI) / 180;
+        const angleDeg = i * angleStep;
+        const rad = (angleDeg * Math.PI) / 180;
 
+        // 원형 궤도 좌표 계산
         const x = radius * Math.sin(rad);
         const z = radius * Math.cos(rad);
         const y = - (i * heightStep);
 
-        // --- 1. [건축] 웅장한 나선형 바닥 계단 패널 (Grand Step Platform) ---
+        // --- 1. [바닥 발판] 계단식 플랫폼 ---
         const floorStep = document.createElement('a-box');
-        floorStep.setAttribute('position', `${x} ${y - 0.15} ${z}`);
-        floorStep.setAttribute('rotation', `0 ${currentAngle} 0`);
-        floorStep.setAttribute('width', '8.5');
-        floorStep.setAttribute('height', '0.3');
-        floorStep.setAttribute('depth', '4.5');
-        floorStep.setAttribute('color', '#1e2029');
-        floorStep.setAttribute('material', 'roughness: 0.8');
+        floorStep.setAttribute('position', `${x} ${y - 0.1} ${z}`);
+        floorStep.setAttribute('rotation', `0 ${angleDeg} 0`);
+        floorStep.setAttribute('width', '7.0');
+        floorStep.setAttribute('height', '0.2');
+        floorStep.setAttribute('depth', '4.0');
+        floorStep.setAttribute('color', '#222533');
+        floorStep.setAttribute('material', 'roughness: 0.7');
         container.appendChild(floorStep);
 
-        // --- 2. [전시] 정면 시선 텍스트 벽 (Monumental Wall) ---
+        // --- 2. [벽 & 텍스트 그룹] ---
         const wallGroup = document.createElement('a-entity');
-        wallGroup.setAttribute('position', `${x} ${y + 1.8} ${z}`);
-        wallGroup.setAttribute('rotation', `0 ${currentAngle} 0`);
+        // 관람객이 정면에서 마주보도록 각도 정렬 (+90도 보정)
+        wallGroup.setAttribute('position', `${x} ${y + 1.6} ${z}`);
+        wallGroup.setAttribute('rotation', `0 ${angleDeg + 90} 0`);
 
-        // 대리석 질감의 순백색 벽
+        // 대리석 질감의 밝은 벽
         const wall = document.createElement('a-box');
         wall.setAttribute('width', wallWidth);
-        wall.setAttribute('height', '4.0');
+        wall.setAttribute('height', '3.2');
         wall.setAttribute('depth', wallThickness);
-        wall.setAttribute('color', '#f8f8fa');
-        wall.setAttribute('material', 'roughness: 0.9');
-        wall.setAttribute('class', 'solid-wall'); // 물리 충돌 대상
+        wall.setAttribute('color', '#f4f4f6');
+        wall.setAttribute('material', 'roughness: 0.95');
+        wall.setAttribute('class', 'solid-wall');
 
-        // 고전 서체 텍스트
+        // 벽 정면에 선명하게 부착되는 텍스트 (글자가 파묻히지 않도록 Z축 오프셋 적용)
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', sentence.trim());
         textEl.setAttribute('align', 'center');
-        textEl.setAttribute('width', '6.2');
-        textEl.setAttribute('wrap-count', '36');
-        textEl.setAttribute('position', `0 0.1 ${wallThickness/2 + 0.15}`);
+        textEl.setAttribute('width', '5.4');
+        textEl.setAttribute('wrap-count', '30');
+        textEl.setAttribute('position', `0 0 ${wallThickness / 2 + 0.08}`);
         textEl.setAttribute('color', '#111111');
+        textEl.setAttribute('font', 'sourcecodepro');
 
-        // 벽을 위에서 아래로 장엄하게 비추는 갤러리 웜톤 핀 조명
+        // 벽 바로 위에 부드러운 웜톤 포인트 조명
         const light = document.createElement('a-light');
-        light.setAttribute('type', 'spot');
-        light.setAttribute('color', '#fff3dc');
-        light.setAttribute('intensity', '1.2');
-        light.setAttribute('angle', '45');
-        light.setAttribute('penumbra', '0.4');
-        light.setAttribute('position', '0 2.8 2.2');
-        light.setAttribute('target', wall);
+        light.setAttribute('type', 'point');
+        light.setAttribute('color', '#fff5e6');
+        light.setAttribute('intensity', '0.8');
+        light.setAttribute('distance', '6');
+        light.setAttribute('position', '0 1.2 1.5');
 
         wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
         wallGroup.appendChild(light);
         container.appendChild(wallGroup);
 
-        // --- 3. [디테일] 외곽 기둥 (Exterior Colonnade) ---
-        // 웅장한 건축 느낌을 더해주는 바깥쪽 기둥 배치
-        const colX = (radius + 4) * Math.sin(rad);
-        const colZ = (radius + 4) * Math.cos(rad);
+        // --- 3. [외곽 웅장한 기둥] ---
+        const colX = (radius + 3) * Math.sin(rad);
+        const colZ = (radius + 3) * Math.cos(rad);
         const column = document.createElement('a-cylinder');
-        column.setAttribute('position', `${colX} ${y + 2} ${colZ}`);
-        column.setAttribute('radius', '0.4');
-        column.setAttribute('height', '6');
-        column.setAttribute('color', '#2b2d38');
-        column.setAttribute('material', 'roughness: 0.9');
+        column.setAttribute('position', `${colX} ${y + 1.5} ${colZ}`);
+        column.setAttribute('radius', '0.35');
+        column.setAttribute('height', '5.5');
+        column.setAttribute('color', '#2d3142');
         container.appendChild(column);
       });
-    });
+    }
+
+    // 버튼 클릭 및 페이지 로드 시 즉시 생성
+    document.getElementById('generateBtn').addEventListener('click', buildGallery);
+    window.addEventListener('load', buildGallery);
   </script>
 </body>
 </html>
-
