@@ -1,126 +1,183 @@
-ㅍ<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Text Gallery - 오리지널 황금 물리 엔진</title>
-  
-  <!-- 1. A-Frame 코어 (안정적인 1.4.0) -->
+  <title>Magnificent Grand Spiral Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  
-  <!-- ★ 2. aframe-extras (중요: kinematic-body가 살아있는 마지막 버전 6.1.1 사용!) -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-  
-  <!-- 3. 물리 엔진 (4.2.2 버전) -->
-  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.2.2/dist/aframe-physics-system.min.js"></script>
-  
   <style>
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
-      background: rgba(255, 255, 255, 0.95); padding: 15px;
-      border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      width: 300px; font-family: sans-serif;
+      background: rgba(15, 16, 21, 0.9); padding: 18px;
+      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      width: 330px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.15);
+      color: #e2d9c8;
     }
-    textarea { width: 100%; height: 85px; margin-bottom: 10px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-    button { width: 100%; padding: 12px; background: #222; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-    button:hover { background: #444; }
+    textarea { 
+      width: 100%; height: 95px; margin-bottom: 12px; padding: 10px; 
+      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 6px; line-height: 1.4; background: #08090d; color: #fff;
+      font-family: inherit; font-size: 13px;
+    }
+    button { 
+      width: 100%; padding: 12px; background: #c5a059; color: #000; 
+      border: none; border-radius: 6px; font-weight: bold; font-size: 14px; 
+      cursor: pointer; transition: 0.2s; letter-spacing: 1px;
+    }
+    button:hover { background: #dfb96c; }
   </style>
+
+  <!-- ★ 벽 통과 방지 물리 충돌 스크립트 -->
+  <script>
+    AFRAME.registerComponent('wall-collider', {
+      init: function () {
+        this.playerRadius = 0.5;
+      },
+      tick: function () {
+        const playerPos = this.el.object3D.position;
+        const walls = document.querySelectorAll('.solid-wall');
+        
+        walls.forEach(wall => {
+          const mesh = wall.getObject3D('mesh');
+          if (!mesh) return;
+
+          const box = new THREE.Box3().setFromObject(mesh);
+          const closestPoint = new THREE.Vector3();
+          box.clampPoint(playerPos, closestPoint);
+          const distance = playerPos.distanceTo(closestPoint);
+          
+          if (distance < this.playerRadius) {
+            const overlap = this.playerRadius - distance;
+            const pushDir = new THREE.Vector3().subVectors(playerPos, closestPoint);
+            pushDir.y = 0; 
+            if (pushDir.lengthSq() === 0) {
+              pushDir.set(0, 0, 1);
+            } else {
+              pushDir.normalize();
+            }
+            playerPos.add(pushDir.multiplyScalar(overlap));
+          }
+        });
+      }
+    });
+  </script>
 </head>
 <body>
 
   <div id="ui-container">
-    <h3 style="margin: 0 0 10px 0; color: #111;">텍스트 갤러리</h3>
+    <h3 style="margin: 0 0 10px 0; color: #c5a059; letter-spacing: 1px;">THE GRAND ROTUNDA</h3>
     <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
-    <button id="generateBtn">갤러리 생성하기</button>
+    <button id="generateBtn">웅장한 나선형 건축 생성</button>
   </div>
 
-  <!-- debug: true를 켜두었습니다. 벽과 내 몸에 모두 '초록색 선'이 생기는지 확인하세요! -->
-  <a-scene physics="gravity: -9.8; debug: true">
-    <a-sky color="#050508"></a-sky>
-    
-    <!-- 바닥: 떨어지지 않게 static-body -->
-    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#2b2b2b" material="roughness: 0.8" static-body></a-plane>
-    <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+  <a-scene>
+    <!-- 고요하고 깊은 밤하늘 -->
+    <a-sky color="#030407"></a-sky>
 
+    <!-- 중앙 상단 웅장한 돔 천장 조명 (Cathedral Skylight) -->
+    <a-light type="directional" color="#f5e8d0" intensity="0.5" position="0 50 0"></a-light>
+    <a-light type="ambient" color="#ffffff" intensity="0.25"></a-light>
+
+    <!-- 거대한 최하단 대리석 바닥 -->
+    <a-cylinder position="0 -60 0" radius="35" height="1" color="#121318" material="roughness: 0.7"></a-cylinder>
+
+    <!-- 중앙을 관통하는 거대한 원형 기둥 (Monumental Core Column) -->
+    <a-cylinder position="0 0 0" radius="2.5" height="120" color="#181a20" material="roughness: 0.95"></a-cylinder>
+
+    <!-- 갤러리 건축 오브젝트들이 동적으로 추가되는 컨테이너 -->
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 부활한 진짜 물리 엔진 몸통! (kinematic-body가 정상 작동합니다) -->
-    <a-entity id="rig" 
-              movement-controls="speed: 0.15" 
-              kinematic-body="radius: 0.5; height: 1.6"
-              position="0 0.1 0">
-      
-      <!-- 내 몸 시각화 (물리 속성 안 넣음) -->
-      <a-sphere position="0 0.8 0" radius="0.5" color="red" opacity="0.5" material="side: double;" transparent="true"></a-sphere>
-
-      <!-- 아이패드 시점 오류 방지용 옵션 유지 -->
-      <a-entity camera position="0 1.6 0" look-controls="magicWindowTrackingEnabled: false">
-        <a-cursor color="#000000"></a-cursor>
-      </a-entity>
-      
+    <!-- 플레이어 초기 카메라 (최상층 웅장한 계단 입구) -->
+    <a-entity id="player" position="0 0 14" wall-collider>
+      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 70">
+        <a-cursor color="#c5a059"></a-cursor>
+      </a-camera>
     </a-entity>
   </a-scene>
 
   <script>
     document.getElementById('generateBtn').addEventListener('click', () => {
       const text = document.getElementById('textInput').value;
-      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text.trim()];
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
       container.innerHTML = '';
 
-      const wallLength = 6;
-      const wallThickness = 0.2; 
-      const H = wallLength / 2;
+      const radius = 12;       // 웅장한 크기를 위해 반경을 12m로 확장
+      const angleStep = 36;    // 한 문장당 36도씩 완만하게 회전 (10문장에 360도 1회전)
+      const heightStep = 2.0;  // 웅장한 층고 낙차 (문장당 2m 하강)
+      const wallWidth = 7.0;   // 장엄한 와이드 전면 벽
+      const wallThickness = 0.3;
 
-      let curX = 0;
-      let curZ = -4; 
-      let curDir = 0; 
+      sentences.forEach((sentence, i) => {
+        const currentAngle = i * angleStep;
+        const rad = (currentAngle * Math.PI) / 180;
 
-      sentences.forEach((sentence, index) => {
+        const x = radius * Math.sin(rad);
+        const z = radius * Math.cos(rad);
+        const y = - (i * heightStep);
+
+        // --- 1. [건축] 웅장한 나선형 바닥 계단 패널 (Grand Step Platform) ---
+        const floorStep = document.createElement('a-box');
+        floorStep.setAttribute('position', `${x} ${y - 0.15} ${z}`);
+        floorStep.setAttribute('rotation', `0 ${currentAngle} 0`);
+        floorStep.setAttribute('width', '8.5');
+        floorStep.setAttribute('height', '0.3');
+        floorStep.setAttribute('depth', '4.5');
+        floorStep.setAttribute('color', '#1e2029');
+        floorStep.setAttribute('material', 'roughness: 0.8');
+        container.appendChild(floorStep);
+
+        // --- 2. [전시] 정면 시선 텍스트 벽 (Monumental Wall) ---
         const wallGroup = document.createElement('a-entity');
-        wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
-        wallGroup.setAttribute('rotation', `0 ${curDir === 0 ? 0 : 90} 0`);
+        wallGroup.setAttribute('position', `${x} ${y + 1.8} ${z}`);
+        wallGroup.setAttribute('rotation', `0 ${currentAngle} 0`);
 
-        const box = document.createElement('a-box');
-        box.setAttribute('width', wallLength);
-        box.setAttribute('height', '3');
-        box.setAttribute('depth', wallThickness);
-        box.setAttribute('color', '#ffffff');
-        box.setAttribute('material', 'roughness: 0.9');
-        
-        // ★ 벽을 물리 장애물로 만듭니다
-        box.setAttribute('static-body', '');
+        // 대리석 질감의 순백색 벽
+        const wall = document.createElement('a-box');
+        wall.setAttribute('width', wallWidth);
+        wall.setAttribute('height', '4.0');
+        wall.setAttribute('depth', wallThickness);
+        wall.setAttribute('color', '#f8f8fa');
+        wall.setAttribute('material', 'roughness: 0.9');
+        wall.setAttribute('class', 'solid-wall'); // 물리 충돌 대상
 
+        // 고전 서체 텍스트
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', sentence.trim());
         textEl.setAttribute('align', 'center');
-        textEl.setAttribute('width', '5');
-        textEl.setAttribute('wrap-count', '35');
-        textEl.setAttribute('position', `0 0 ${wallThickness/2 + 0.02}`);
-        textEl.setAttribute('color', '#000000'); 
+        textEl.setAttribute('width', '6.2');
+        textEl.setAttribute('wrap-count', '36');
+        textEl.setAttribute('position', `0 0.1 ${wallThickness/2 + 0.15}`);
+        textEl.setAttribute('color', '#111111');
 
+        // 벽을 위에서 아래로 장엄하게 비추는 갤러리 웜톤 핀 조명
         const light = document.createElement('a-light');
-        light.setAttribute('type', 'point');
-        light.setAttribute('color', '#ffffff');
-        light.setAttribute('intensity', '0.6');
-        light.setAttribute('distance', '4');
-        light.setAttribute('position', '0 1 1.5');
+        light.setAttribute('type', 'spot');
+        light.setAttribute('color', '#fff3dc');
+        light.setAttribute('intensity', '1.2');
+        light.setAttribute('angle', '45');
+        light.setAttribute('penumbra', '0.4');
+        light.setAttribute('position', '0 2.8 2.2');
+        light.setAttribute('target', wall);
 
-        wallGroup.appendChild(box);
+        wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
         wallGroup.appendChild(light);
         container.appendChild(wallGroup);
 
-        if (curDir === 0) {
-          curX += H; curZ -= H; curDir = 1;      
-        } else {
-          curX += H; curZ -= H; curDir = 0;      
-        }
+        // --- 3. [디테일] 외곽 기둥 (Exterior Colonnade) ---
+        // 웅장한 건축 느낌을 더해주는 바깥쪽 기둥 배치
+        const colX = (radius + 4) * Math.sin(rad);
+        const colZ = (radius + 4) * Math.cos(rad);
+        const column = document.createElement('a-cylinder');
+        column.setAttribute('position', `${colX} ${y + 2} ${colZ}`);
+        column.setAttribute('radius', '0.4');
+        column.setAttribute('height', '6');
+        column.setAttribute('color', '#2b2d38');
+        column.setAttribute('material', 'roughness: 0.9');
+        container.appendChild(column);
       });
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('generateBtn').click();
     });
   </script>
 </body>
 </html>
+
