@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Random 90-Degree Text Gallery</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <style>
+    #ui-container {
+      position: absolute; top: 20px; left: 20px; z-index: 1000;
+      background: rgba(15, 16, 21, 0.92); padding: 16px;
+      border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.15);
+      color: #e2d9c8;
+    }
+    textarea { 
+      width: 100%; height: 90px; margin-bottom: 10px; padding: 8px; 
+      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 4px; line-height: 1.4; background: #08090d; color: #fff;
+      font-family: inherit; font-size: 13px;
+    }
+    button { 
+      width: 100%; padding: 12px; background: #c5a059; color: #000; 
+      border: none; border-radius: 5px; font-weight: bold; font-size: 14px; 
+      cursor: pointer; transition: 0.2s; 
+    }
+    button:hover { background: #dfb96c; }
+    .back-btn {
+      display: inline-block; margin-bottom: 10px; color: #c5a059; 
+      text-decoration: none; font-size: 13px;
+    }
+  </style>
+
+  <!-- ★ 완벽 작동: 벽 통과 강제 차단 물리 충돌 스크립트 -->
+  <script>
+    AFRAME.registerComponent('wall-collider', {
+      init: function () {
+        this.playerRadius = 0.5; // 충돌 반경 50cm
+      },
+      tick: function () {
+        const playerPos = this.el.object3D.position;
+        const walls = document.querySelectorAll('.solid-wall');
+        
+        walls.forEach(wall => {
+          const mesh = wall.getObject3D('mesh');
+          if (!mesh) return;
+
+          const box = new THREE.Box3().setFromObject(mesh);
+          const closestPoint = new THREE.Vector3();
+          box.clampPoint(playerPos, closestPoint);
+          const distance = playerPos.distanceTo(closestPoint);
+          
+          if (distance < this.playerRadius) {
+            const overlap = this.playerRadius - distance;
+            const pushDir = new THREE.Vector3().subVectors(playerPos, closestPoint);
+            pushDir.y = 0; 
+            if (pushDir.lengthSq() === 0) {
+              pushDir.set(0, 0, 1);
+            } else {
+              pushDir.normalize();
+            }
+            playerPos.add(pushDir.multiplyScalar(overlap));
+          }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+
+  <div id="ui-container">
+    <a href="index.html" class="back-btn">← 메인 서재(홈)로 돌아가기</a>
+    <h3 style="margin: 0 0 10px 0; color: #c5a059;">90도 연결 텍스트 갤러리</h3>
+    <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
+    <button id="generateBtn">새로운 갤러리 생성</button>
+  </div>
+
+  <a-scene>
+    <!-- 차분한 다크 갤러리 배경과 바닥 -->
+    <a-sky color="#030305"></a-sky>
+    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#14151a" material="roughness: 0.85"></a-plane>
+    <a-light type="ambient" color="#ffffff" intensity="0.35"></a-light>
+
+    <a-entity id="gallery-container"></a-entity>
+
+    <!-- 물리 충돌 지원 플레이어 카메라 -->
+    <a-entity id="player" position="0 0 0" wall-collider>
+      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 60">
+        <a-cursor color="#c5a059"></a-cursor>
+      </a-camera>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    function buildZigzagGallery() {
+      const text = document.getElementById('textInput').value;
+      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = '';
+
+      const wallLength = 6;      // 벽 길이 (6m)
+      const wallThickness = 0.2; // 벽 두께 (20cm)
+      const H = wallLength / 2;  // 절반 길이 (3m)
+
+      // 4개 방향에 따른 이동 벡터 (0:북, 1:동, 2:남, 3:서)
+      const dirVectors = [
+        { dx: 0, dz: -1 }, // 북
+        { dx: 1, dz: 0 },  // 동
+        { dx: 0, dz: 1 },  // 남
+        { dx: -1, dz: 0 }  // 서
+      ];
+
+      let curDir = 0;
+      let curX = 0;
+      let curZ = -H;
+
+      sentences.forEach((sentence, i) => {
+        // 1. 벽 생성
+        const wallGroup = document.createElement('a-entity');
+        wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
+        wallGroup.setAttribute('rotation', `0 ${curDir * -90} 0`);
+
+        const wall = document.createElement('a-box');
+        wall.setAttribute('width', wallLength);
+        wall.setAttribute('height', '3.5');
+        wall.setAttribute('depth', wallThickness);
+        wall.setAttribute('color', '#ffffff');
+        wall.setAttribute('material', 'roughness: 0.95');
+        wall.setAttribute('class', 'solid-wall');
+
+        // 텍스트
+        const textEl = document.createElement('a-text');
+        textEl.setAttribute('value', sentence.trim());
+        textEl.setAttribute('align', 'center');
+        textEl.setAttribute('width', '5.2');
+        textEl.setAttribute('wrap-count', '32');
+        textEl.setAttribute('position', `0 0 ${wallThickness/2 + 0.15}`);
+        textEl.setAttribute('color', '#000000');
+
+        // 핀 조명
+        const light = document.createElement('a-light');
+        light.setAttribute('type', 'point');
+        light.setAttribute('color', '#ffffff');
+        light.setAttribute('intensity', '0.8');
+        light.setAttribute('distance', '6');
+        light.setAttribute('position', '0 1 2');
+
+        wallGroup.appendChild(wall);
+        wallGroup.appendChild(textEl);
+        wallGroup.appendChild(light);
+        container.appendChild(wallGroup);
+
+        // 2. 90도 회전 방향 결정
+        const possibleTurns = [0, 1, -1];
+        const turn = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
+        const nextDir = (curDir + turn + 4) % 4;
+
+        // 3. 모서리 유격 없는 다음 벽 좌표 계산
+        const vCur = dirVectors[curDir];
+        const vNext = dirVectors[nextDir];
+
+        curX = curX + (H * vCur.dx) + (H * vNext.dx);
+        curZ = curZ + (H * vCur.dz) + (H * vNext.dz);
+        curDir = nextDir;
+      });
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', buildZigzagGallery);
+    window.addEventListener('load', buildZigzagGallery);
+  </script>
+</body>
+</html>

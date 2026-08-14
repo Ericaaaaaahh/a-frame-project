@@ -1,0 +1,301 @@
+/* 기본 초기화 */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #111;
+  font-family: 'Georgia', serif;
+  overflow: hidden; /* 화면 스크롤 숨김 */
+}
+
+/* =========================================
+   1. 상단 네이비-그레이 메뉴바
+========================================= */
+.navbar {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #2c3440; /* 네이비가 살짝 섞인 회색 */
+  border-bottom: 2px solid #1a1f26;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.icon-btn {
+  font-size: 24px;
+  cursor: pointer;
+  background: #3a4454;
+  padding: 5px 10px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+.icon-btn:hover { background: #4a5668; }
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #1e242c;
+  border-radius: 20px;
+  padding: 8px 15px;
+  width: 300px;
+  border: 1px solid #414c5c;
+}
+
+.search-icon { font-size: 14px; margin-right: 8px; }
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 100%;
+  outline: none;
+  font-family: 'Georgia', serif;
+}
+.search-bar input::placeholder { color: #8892a0; }
+
+.menu-text {
+  color: #e2d9c8;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+/* =========================================
+   2. 3D 거리 뷰 및 벽돌/바닥
+========================================= */
+.street-view {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.floor {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 15vh; /* 화면 밑바닥 */
+  background: linear-gradient(to bottom, #111111, #050505);
+  box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+  z-index: 10;
+}
+
+.brick-wall {
+  position: relative;
+  width: 100%;
+  height: 85vh; /* 메뉴바 제외 벽 높이 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; /* 문들이 바닥에 붙도록 */
+  padding-bottom: 2vh; 
+  gap: 15px; /* 문과 가로등 사이 간격 */
+  
+  /* 따뜻한 벽돌 질감 SVG 패턴 삽입 */
+  background-color: #8c4a32;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), /* 어두운 밤 느낌 오버레이 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Cg fill='%237a3f30' fill-opacity='0.9'%3E%3Crect width='58' height='18' x='0' y='0' rx='2'/%3E%3Crect width='58' height='18' x='60' y='0' rx='2'/%3E%3Crect width='58' height='18' x='-30' y='20' rx='2'/%3E%3Crect width='58' height='18' x='30' y='20' rx='2'/%3E%3Crect width='58' height='18' x='90' y='20' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: auto, 120px 40px;
+  box-shadow: inset 0 -30px 50px rgba(0,0,0,0.9);
+}
+
+/* =========================================
+   3. 갤러리 슬롯 (총 5자리)
+========================================= */
+.gallery-slot {
+  width: 180px;
+  height: 380px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* 나중에 추가될 빈 공간은 살짝 어두운 틀만 남김 */
+.gallery-slot.empty {
+  border: 2px solid rgba(0,0,0,0.3);
+  border-radius: 90px 90px 0 0;
+  background: rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   4. 문 프레임 및 와인색 문 (Alice)
+========================================= */
+.door-frame {
+  width: 160px;
+  height: 350px;
+  background: #1a1a1a;
+  border-radius: 80px 80px 0 0; /* 완벽한 아치형 */
+  position: relative;
+  perspective: 1200px; /* 3D 원근감 핵심 */
+  box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.5);
+  border: 8px solid #2a2a2a; /* 문을 감싸는 돌/나무 틀 */
+  border-bottom: none;
+}
+
+/* 문이 열렸을 때 내부 공간 (포털 느낌) */
+.door-void {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 72px 72px 0 0;
+  background: radial-gradient(circle, #2a111a 0%, #000000 80%);
+  color: #c5a059;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.5s 0.3s;
+}
+
+.door-frame:hover .door-void {
+  opacity: 1; /* 문이 열리면 안쪽 글씨가 보임 */
+}
+
+/* 닫혀있는 와인색/버건디 문체 */
+.door-body {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #5e1921; /* 고급스러운 버건디 와인색 */
+  border-radius: 72px 72px 0 0;
+  transform-origin: left center; /* 왼쪽 경첩을 축으로 회전 */
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* 스르륵 열리는 속도 */
+  box-shadow: inset -5px 0 15px rgba(0,0,0,0.5); /* 입체감 그림자 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* 마우스 올렸을 때 문 열림! */
+.door-frame:hover .door-body {
+  transform: rotateY(-65deg); /* 문이 안쪽으로 스윽 열림 */
+  box-shadow: inset -2px 0 5px rgba(0,0,0,0.5), 15px 0 20px rgba(0,0,0,0.6);
+}
+
+/* =========================================
+   5. 문 내부 디자인 (음각 패널, 글씨, 손잡이)
+========================================= */
+.panel {
+  border: 2px solid rgba(0,0,0,0.4);
+  box-shadow: inset 0 5px 10px rgba(0,0,0,0.4), 0 1px 1px rgba(255,255,255,0.1);
+  background: #55161e;
+}
+
+/* 맨 위 아치형 패널 */
+.top-arch-panel {
+  width: 120px;
+  height: 90px;
+  border-radius: 60px 60px 0 0;
+  margin-top: 20px;
+}
+
+/* Alice in Wonderland 글씨 */
+.door-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 32px;
+  color: #dfb96c; /* 금박 느낌의 색상 */
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+  margin: 15px 0;
+  text-align: center;
+  line-height: 0.9;
+  width: 90%;
+  transform: rotate(-3deg); /* 살짝 비스듬하게 멋 부림 */
+}
+
+/* 중간, 아래 네모 패널들 */
+.panel-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.mid-panel { width: 55px; height: 50px; border-radius: 4px; }
+.bot-panel { width: 55px; height: 80px; border-radius: 4px; }
+
+/* 문고리 (금색) */
+.door-knob {
+  position: absolute;
+  right: 15px;
+  top: 55%;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #dfb96c 0%, #8c6a28 100%);
+  border-radius: 50%;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+
+/* 중앙 장식 (Knocker) */
+.door-knocker {
+  position: absolute;
+  top: 48%;
+  width: 16px;
+  height: 20px;
+  border: 3px solid #dfb96c;
+  border-radius: 50% 50% 10px 10px;
+  box-shadow: 0 4px 5px rgba(0,0,0,0.6);
+}
+
+/* =========================================
+   6. 벽돌 사이사이에 달린 벽 조명 (가로등)
+========================================= */
+.lantern-wrapper {
+  width: 40px;
+  height: 200px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 120px; /* 벽 중간 높이에 고정 */
+}
+
+.lantern-body {
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 35px;
+  background: #111;
+  border-radius: 2px;
+  /* 유리 부분 */
+  box-shadow: inset 0 0 0 3px #111, inset 0 0 10px #ffaa00, 0 0 15px #ffaa00;
+  background-image: linear-gradient(to bottom, transparent 30%, #ffcc00 30%, #ff8800 70%, transparent 70%);
+}
+
+.lantern-body::before { /* 가로등 지붕 */
+  content: '';
+  position: absolute;
+  top: -10px; left: -4px;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 10px solid #111;
+}
+
+.lantern-body::after { /* 가로등 밑받침 */
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 0;
+  width: 16px; height: 6px;
+  background: #111;
+  border-radius: 0 0 4px 4px;
+}
+
+.lantern-glow {
+  position: absolute;
+  top: 10px;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(255, 170, 0, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}

@@ -2,186 +2,94 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Magnificent Grand Spiral Gallery</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <style>
-    #ui-container {
-      position: absolute; top: 20px; left: 20px; z-index: 1000;
-      background: rgba(18, 20, 28, 0.92); padding: 18px;
-      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(197, 160, 89, 0.3);
-      color: #e2d9c8;
-    }
-    textarea { 
-      width: 100%; height: 90px; margin-bottom: 12px; padding: 10px; 
-      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
-      border-radius: 6px; line-height: 1.4; background: #0c0d12; color: #fff;
-      font-family: inherit; font-size: 13px;
-    }
-    button { 
-      width: 100%; padding: 12px; background: #c5a059; color: #0c0d12; 
-      border: none; border-radius: 6px; font-weight: bold; font-size: 14px; 
-      cursor: pointer; transition: 0.2s; letter-spacing: 1px;
-    }
-    button:hover { background: #e0b86c; }
-  </style>
-
-  <!-- ★ 완벽 작동: 실시간 2D 평면 충돌 강제 차단 스크립트 -->
-  <script>
-    AFRAME.registerComponent('wall-collider', {
-      init: function () {
-        this.playerRadius = 0.6;
-      },
-      tick: function () {
-        const playerPos = this.el.object3D.position;
-        const walls = document.querySelectorAll('.solid-wall');
-        
-        walls.forEach(wall => {
-          const mesh = wall.getObject3D('mesh');
-          if (!mesh) return;
-
-          const box = new THREE.Box3().setFromObject(mesh);
-          
-          // 높이(Y)는 무시하고 수평(X, Z) 거리만으로 충돌 체크
-          const closestPoint = new THREE.Vector3();
-          box.clampPoint(playerPos, closestPoint);
-          closestPoint.y = playerPos.y; 
-
-          const dist = Math.hypot(playerPos.x - closestPoint.x, playerPos.z - closestPoint.z);
-          
-          if (dist < this.playerRadius) {
-            const overlap = this.playerRadius - dist;
-            const pushDir = new THREE.Vector3(playerPos.x - closestPoint.x, 0, playerPos.z - closestPoint.z);
-            if (pushDir.lengthSq() === 0) {
-              pushDir.set(0, 0, 1);
-            } else {
-              pushDir.normalize();
-            }
-            playerPos.add(pushDir.multiplyScalar(overlap));
-          }
-        });
-      }
-    });
-  </script>
+  <title>Archive of Classics</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 고급스러운 영어 필기체 폰트 불러오기 -->
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <div id="ui-container">
-    <h3 style="margin: 0 0 10px 0; color: #c5a059; letter-spacing: 1px;">THE GRAND ROTUNDA</h3>
-    <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
-    <button id="generateBtn">새로운 나선형 건축 생성</button>
-  </div>
+  <!-- 네이비/회색 톤의 상단 메뉴바 -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="icon-btn">🏠</div>
+    </div>
+    <div class="nav-center">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="원서 제목이나 작가를 검색하세요...">
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="menu-text">Menu</div>
+    </div>
+  </nav>
 
-  <a-scene>
-    <!-- 고급스러운 갤러리 배경색 -->
-    <a-sky color="#0d0f17"></a-sky>
+  <!-- 3D 벽돌 거리 무대 -->
+  <main class="street-view">
+    <!-- 흑색 바닥 -->
+    <div class="floor"></div>
 
-    <!-- ★ 전체를 은은하고 밝게 밝혀주는 갤러리 조명 셋업 -->
-    <a-light type="ambient" color="#ffffff" intensity="0.75"></a-light>
-    <a-light type="directional" color="#fcebd2" intensity="0.6" position="5 30 10"></a-light>
+    <!-- 따뜻한 벽돌 벽면 컨테이너 -->
+    <div class="brick-wall">
+      
+      <!-- 갤러리 1 (빈 자리) -->
+      <div class="gallery-slot empty"></div>
 
-    <!-- 바닥 베이스 -->
-    <a-cylinder position="0 -30 0" radius="30" height="1" color="#151722" material="roughness: 0.8"></a-cylinder>
+      <!-- 가로등 -->
+      <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-    <!-- 중앙을 관통하는 웅장한 대리석 원형 기둥 -->
-    <a-cylinder position="0 0 0" radius="3" height="80" color="#1c1f2e" material="roughness: 0.9"></a-cylinder>
+      <!-- 갤러리 2 (빈 자리) -->
+      <div class="gallery-slot empty"></div>
 
-    <a-entity id="gallery-container"></a-entity>
+      <!-- 가로등 -->
+      <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-    <!-- 첫 번째 벽 정면 3미터 앞에 플레이어 카메라 배치 -->
-    <a-entity id="player" position="0 0 7" wall-collider>
-      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 50">
-        <a-cursor color="#c5a059"></a-cursor>
-      </a-camera>
-    </a-entity>
-  </a-scene>
+      <!-- ★ 갤러리 3 (이상한 나라의 앨리스 - 메인 와인색 문) -->
+      <div class="gallery-slot active">
+        <!-- 문틀 (돌/나무 프레임 느낌) -->
+        <div class="door-frame">
+          <div class="door-void">Enter the Gallery ➔</div>
+          
+          <!-- 클릭 시 gallery.html로 이동하는 실제 문 -->
+          <a href="gallery.html" class="door-body">
+            <!-- 문의 패널 구조 (사진 참고) -->
+            <div class="panel top-arch-panel"></div>
+            
+            <!-- 앨리스 필기체 텍스트 -->
+            <div class="door-title">Alice in Wonderland</div>
+            
+            <div class="panel-row">
+              <div class="panel mid-panel"></div>
+              <div class="panel mid-panel"></div>
+            </div>
+            
+            <div class="panel-row">
+              <div class="panel bot-panel"></div>
+              <div class="panel bot-panel"></div>
+            </div>
 
-  <script>
-    function buildGallery() {
-      const text = document.getElementById('textInput').value;
-      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-      const container = document.getElementById('gallery-container');
-      container.innerHTML = '';
+            <!-- 문고리와 장식 -->
+            <div class="door-knob"></div>
+            <div class="door-knocker"></div>
+          </a>
+        </div>
+      </div>
 
-      const radius = 10;       // 나선 반경 (10m)
-      const angleStep = 40;    // 한 문장당 40도 회전
-      const heightStep = 1.6;  // 완만하고 웅장한 층고 하강 (1.6m)
-      const wallWidth = 6.0;
-      const wallThickness = 0.25;
+      <!-- 가로등 -->
+      <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-      sentences.forEach((sentence, i) => {
-        const angleDeg = i * angleStep;
-        const rad = (angleDeg * Math.PI) / 180;
+      <!-- 갤러리 4 (빈 자리) -->
+      <div class="gallery-slot empty"></div>
 
-        // 원형 궤도 좌표 계산
-        const x = radius * Math.sin(rad);
-        const z = radius * Math.cos(rad);
-        const y = - (i * heightStep);
+      <!-- 가로등 -->
+      <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-        // --- 1. [바닥 발판] 계단식 플랫폼 ---
-        const floorStep = document.createElement('a-box');
-        floorStep.setAttribute('position', `${x} ${y - 0.1} ${z}`);
-        floorStep.setAttribute('rotation', `0 ${angleDeg} 0`);
-        floorStep.setAttribute('width', '7.0');
-        floorStep.setAttribute('height', '0.2');
-        floorStep.setAttribute('depth', '4.0');
-        floorStep.setAttribute('color', '#222533');
-        floorStep.setAttribute('material', 'roughness: 0.7');
-        container.appendChild(floorStep);
+      <!-- 갤러리 5 (빈 자리) -->
+      <div class="gallery-slot empty"></div>
 
-        // --- 2. [벽 & 텍스트 그룹] ---
-        const wallGroup = document.createElement('a-entity');
-        // 관람객이 정면에서 마주보도록 각도 정렬 (+90도 보정)
-        wallGroup.setAttribute('position', `${x} ${y + 1.6} ${z}`);
-        wallGroup.setAttribute('rotation', `0 ${angleDeg + 90} 0`);
+    </div>
+  </main>
 
-        // 대리석 질감의 밝은 벽
-        const wall = document.createElement('a-box');
-        wall.setAttribute('width', wallWidth);
-        wall.setAttribute('height', '3.2');
-        wall.setAttribute('depth', wallThickness);
-        wall.setAttribute('color', '#f4f4f6');
-        wall.setAttribute('material', 'roughness: 0.95');
-        wall.setAttribute('class', 'solid-wall');
-
-        // 벽 정면에 선명하게 부착되는 텍스트 (글자가 파묻히지 않도록 Z축 오프셋 적용)
-        const textEl = document.createElement('a-text');
-        textEl.setAttribute('value', sentence.trim());
-        textEl.setAttribute('align', 'center');
-        textEl.setAttribute('width', '5.4');
-        textEl.setAttribute('wrap-count', '30');
-        textEl.setAttribute('position', `0 0 ${wallThickness / 2 + 0.08}`);
-        textEl.setAttribute('color', '#111111');
-        textEl.setAttribute('font', 'sourcecodepro');
-
-        // 벽 바로 위에 부드러운 웜톤 포인트 조명
-        const light = document.createElement('a-light');
-        light.setAttribute('type', 'point');
-        light.setAttribute('color', '#fff5e6');
-        light.setAttribute('intensity', '0.8');
-        light.setAttribute('distance', '6');
-        light.setAttribute('position', '0 1.2 1.5');
-
-        wallGroup.appendChild(wall);
-        wallGroup.appendChild(textEl);
-        wallGroup.appendChild(light);
-        container.appendChild(wallGroup);
-
-        // --- 3. [외곽 웅장한 기둥] ---
-        const colX = (radius + 3) * Math.sin(rad);
-        const colZ = (radius + 3) * Math.cos(rad);
-        const column = document.createElement('a-cylinder');
-        column.setAttribute('position', `${colX} ${y + 1.5} ${colZ}`);
-        column.setAttribute('radius', '0.35');
-        column.setAttribute('height', '5.5');
-        column.setAttribute('color', '#2d3142');
-        container.appendChild(column);
-      });
-    }
-
-    // 버튼 클릭 및 페이지 로드 시 즉시 생성
-    document.getElementById('generateBtn').addEventListener('click', buildGallery);
-    window.addEventListener('load', buildGallery);
-  </script>
 </body>
 </html>
