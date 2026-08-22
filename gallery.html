@@ -2,10 +2,9 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Random 90-Degree Text Gallery (Solid)</title>
+  <title>Random 90-Degree Text Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
-    /* ... (자네가 만든 예쁜 스타일은 그대로 두겠네) ... */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
       background: rgba(15, 16, 21, 0.92); padding: 16px;
@@ -27,37 +26,42 @@
     button:hover { background: #dfb96c; }
   </style>
 
-  <!-- ========================================================
-       ★ 여기에 비밀의 물리 법칙(wall-collider)을 다시 새겨넣었네!
-  ======================================================== -->
   <script>
+    // 물리 엔진: 안전한 Three.js Box3 월드 좌표 계산
     AFRAME.registerComponent('wall-collider', {
       init: function () {
-        this.playerRadius = 0.5; // 자네의 육신을 지키는 50cm의 보호막이라네.
+        this.playerRadius = 0.6;
+        this.tempBox = new THREE.Box3();
+        this.closestPoint = new THREE.Vector3();
+        this.pushDir = new THREE.Vector3();
       },
       tick: function () {
         const playerPos = this.el.object3D.position;
         const walls = document.querySelectorAll('.solid-wall');
-        
+        if (!walls || walls.length === 0) return;
+
         walls.forEach(wall => {
           const mesh = wall.getObject3D('mesh');
           if (!mesh) return;
 
-          const box = new THREE.Box3().setFromObject(mesh);
-          const closestPoint = new THREE.Vector3();
-          box.clampPoint(playerPos, closestPoint);
-          const distance = playerPos.distanceTo(closestPoint);
+          // 월드 매트릭스 갱신 후 바운딩 박스 계산
+          mesh.updateMatrixWorld();
+          this.tempBox.setFromObject(mesh);
+          
+          this.tempBox.clampPoint(playerPos, this.closestPoint);
+          const distance = playerPos.distanceTo(this.closestPoint);
           
           if (distance < this.playerRadius) {
             const overlap = this.playerRadius - distance;
-            const pushDir = new THREE.Vector3().subVectors(playerPos, closestPoint);
-            pushDir.y = 0; 
-            if (pushDir.lengthSq() === 0) {
-              pushDir.set(0, 0, 1);
+            this.pushDir.subVectors(playerPos, this.closestPoint);
+            this.pushDir.y = 0; 
+            
+            if (this.pushDir.lengthSq() === 0) {
+              this.pushDir.set(0, 0, 1);
             } else {
-              pushDir.normalize();
+              this.pushDir.normalize();
             }
-            playerPos.add(pushDir.multiplyScalar(overlap));
+            playerPos.add(this.pushDir.multiplyScalar(overlap));
           }
         });
       }
@@ -67,20 +71,19 @@
 <body>
 
   <div id="ui-container">
-    <h3 style="margin: 0 0 10px 0; color: #c5a059;">90도 연결 텍스트 갤러리 (물리 적용)</h3>
+    <h3 style="margin: 0 0 10px 0; color: #c5a059; font-size: 16px;">90도 연결 텍스트 갤러리</h3>
     <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
-    <button id="generateBtn">새로운 갤러리 생성</button>
+    <button id="generateBtn" type="button">새로운 갤러리 생성</button>
   </div>
 
-  <a-scene>
-    <!-- 차분한 다크 갤러리 배경과 바닥 -->
+  <a-scene id="mainScene">
     <a-sky color="#030305"></a-sky>
     <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#14151a" material="roughness: 0.85"></a-plane>
     <a-light type="ambient" color="#ffffff" intensity="0.35"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 플레이어 카메라에 'wall-collider' 물리 법칙을 부여했네. -->
+    <!-- 플레이어 위치 초기화 & 물리 충돌 -->
     <a-entity id="player" position="0 0 0" wall-collider>
       <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 60">
         <a-cursor color="#c5a059"></a-cursor>
@@ -89,23 +92,46 @@
   </a-scene>
 
   <script>
-    // 페이지가 로드되자마자 갤러리를 자동으로 그리는 마법이라네.
-    window.addEventListener('load', () => {
-      buildZigzagGallery();
-    });
+    const scene = document.querySelector('a-scene');
 
-    document.getElementById('generateBtn').addEventListener('click', () => {
+    function initGallery() {
+      const btn = document.getElementById('generateBtn');
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        buildZigzagGallery();
+      });
+
       buildZigzagGallery();
-    });
+    }
+
+    // A-Frame 씬 준비 완료 시점 보장
+    if (scene.hasLoaded) {
+      initGallery();
+    } else {
+      scene.addEventListener('loaded', initGallery);
+    }
 
     function buildZigzagGallery() {
-      const text = document.getElementById('textInput').value;
+      const inputEl = document.getElementById('textInput');
+      const text = inputEl ? inputEl.value.trim() : '';
+      if (!text) return;
+
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
-      container.innerHTML = '';
+      
+      // 기존 벽 완전히 비우기
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+
+      // 플레이어 위치를 입구 시작점으로 리셋
+      const player = document.getElementById('player');
+      if (player) {
+        player.setAttribute('position', '0 0 0');
+      }
 
       const wallLength = 6;
-      const wallThickness = 0.2;
+      const wallThickness = 0.3;
       const H = wallLength / 2;
 
       const dirVectors = [
@@ -119,7 +145,10 @@
       let curX = 0;
       let curZ = -H;
 
-      sentences.forEach((sentence, i) => {
+      sentences.forEach((sentence) => {
+        const cleanText = sentence.trim();
+        if (!cleanText) return;
+
         const wallGroup = document.createElement('a-entity');
         wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
         wallGroup.setAttribute('rotation', `0 ${curDir * -90} 0`);
@@ -128,25 +157,24 @@
         wall.setAttribute('width', wallLength);
         wall.setAttribute('height', '3.5');
         wall.setAttribute('depth', wallThickness);
-        wall.setAttribute('color', '#ffffff');
-        wall.setAttribute('material', 'roughness: 0.95');
-        // ★ 벽에 '.solid-wall'이라는 이름표를 붙여 물리 엔진이 인식하게 만들었네.
+        wall.setAttribute('color', '#f5f5f7');
+        wall.setAttribute('material', 'roughness: 0.9');
         wall.setAttribute('class', 'solid-wall');
 
         const textEl = document.createElement('a-text');
-        textEl.setAttribute('value', sentence.trim());
+        textEl.setAttribute('value', cleanText);
         textEl.setAttribute('align', 'center');
         textEl.setAttribute('width', '5.2');
-        textEl.setAttribute('wrap-count', '32');
-        textEl.setAttribute('position', `0 0 ${wallThickness/2 + 0.15}`);
-        textEl.setAttribute('color', '#000000');
+        textEl.setAttribute('wrap-count', '30');
+        textEl.setAttribute('position', `0 0 ${wallThickness / 2 + 0.05}`);
+        textEl.setAttribute('color', '#111111');
 
         const light = document.createElement('a-light');
         light.setAttribute('type', 'point');
-        light.setAttribute('color', '#ffffff');
-        light.setAttribute('intensity', '0.8');
+        light.setAttribute('color', '#fff4e0');
+        light.setAttribute('intensity', '0.6');
         light.setAttribute('distance', '6');
-        light.setAttribute('position', '0 1 2');
+        light.setAttribute('position', '0 1 1.8');
 
         wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
