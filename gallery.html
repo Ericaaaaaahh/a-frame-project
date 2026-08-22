@@ -2,9 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Random 90-Degree Text Gallery</title>
+  <title>Random 90-Degree Text Gallery (Solid)</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
+    /* ... (자네가 만든 예쁜 스타일은 그대로 두겠네) ... */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
       background: rgba(15, 16, 21, 0.92); padding: 16px;
@@ -24,17 +25,15 @@
       cursor: pointer; transition: 0.2s; 
     }
     button:hover { background: #dfb96c; }
-    .back-btn {
-      display: inline-block; margin-bottom: 10px; color: #c5a059; 
-      text-decoration: none; font-size: 13px;
-    }
   </style>
 
-  <!-- ★ 완벽 작동: 벽 통과 강제 차단 물리 충돌 스크립트 -->
+  <!-- ========================================================
+       ★ 여기에 비밀의 물리 법칙(wall-collider)을 다시 새겨넣었네!
+  ======================================================== -->
   <script>
     AFRAME.registerComponent('wall-collider', {
       init: function () {
-        this.playerRadius = 0.5; // 충돌 반경 50cm
+        this.playerRadius = 0.5; // 자네의 육신을 지키는 50cm의 보호막이라네.
       },
       tick: function () {
         const playerPos = this.el.object3D.position;
@@ -68,8 +67,7 @@
 <body>
 
   <div id="ui-container">
-    <a href="index.html" class="back-btn">← 메인 서재(홈)로 돌아가기</a>
-    <h3 style="margin: 0 0 10px 0; color: #c5a059;">90도 연결 텍스트 갤러리</h3>
+    <h3 style="margin: 0 0 10px 0; color: #c5a059;">90도 연결 텍스트 갤러리 (물리 적용)</h3>
     <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
     <button id="generateBtn">새로운 갤러리 생성</button>
   </div>
@@ -82,7 +80,7 @@
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 물리 충돌 지원 플레이어 카메라 -->
+    <!-- ★ 플레이어 카메라에 'wall-collider' 물리 법칙을 부여했네. -->
     <a-entity id="player" position="0 0 0" wall-collider>
       <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 60">
         <a-cursor color="#c5a059"></a-cursor>
@@ -91,17 +89,25 @@
   </a-scene>
 
   <script>
+    // 페이지가 로드되자마자 갤러리를 자동으로 그리는 마법이라네.
+    window.addEventListener('load', () => {
+      buildZigzagGallery();
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      buildZigzagGallery();
+    });
+
     function buildZigzagGallery() {
       const text = document.getElementById('textInput').value;
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
       container.innerHTML = '';
 
-      const wallLength = 6;      // 벽 길이 (6m)
-      const wallThickness = 0.2; // 벽 두께 (20cm)
-      const H = wallLength / 2;  // 절반 길이 (3m)
+      const wallLength = 6;
+      const wallThickness = 0.2;
+      const H = wallLength / 2;
 
-      // 4개 방향에 따른 이동 벡터 (0:북, 1:동, 2:남, 3:서)
       const dirVectors = [
         { dx: 0, dz: -1 }, // 북
         { dx: 1, dz: 0 },  // 동
@@ -114,7 +120,6 @@
       let curZ = -H;
 
       sentences.forEach((sentence, i) => {
-        // 1. 벽 생성
         const wallGroup = document.createElement('a-entity');
         wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
         wallGroup.setAttribute('rotation', `0 ${curDir * -90} 0`);
@@ -125,9 +130,9 @@
         wall.setAttribute('depth', wallThickness);
         wall.setAttribute('color', '#ffffff');
         wall.setAttribute('material', 'roughness: 0.95');
+        // ★ 벽에 '.solid-wall'이라는 이름표를 붙여 물리 엔진이 인식하게 만들었네.
         wall.setAttribute('class', 'solid-wall');
 
-        // 텍스트
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', sentence.trim());
         textEl.setAttribute('align', 'center');
@@ -136,7 +141,6 @@
         textEl.setAttribute('position', `0 0 ${wallThickness/2 + 0.15}`);
         textEl.setAttribute('color', '#000000');
 
-        // 핀 조명
         const light = document.createElement('a-light');
         light.setAttribute('type', 'point');
         light.setAttribute('color', '#ffffff');
@@ -149,12 +153,10 @@
         wallGroup.appendChild(light);
         container.appendChild(wallGroup);
 
-        // 2. 90도 회전 방향 결정
         const possibleTurns = [0, 1, -1];
         const turn = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
         const nextDir = (curDir + turn + 4) % 4;
 
-        // 3. 모서리 유격 없는 다음 벽 좌표 계산
         const vCur = dirVectors[curDir];
         const vNext = dirVectors[nextDir];
 
@@ -163,9 +165,6 @@
         curDir = nextDir;
       });
     }
-
-    document.getElementById('generateBtn').addEventListener('click', buildZigzagGallery);
-    window.addEventListener('load', buildZigzagGallery);
   </script>
 </body>
 </html>
