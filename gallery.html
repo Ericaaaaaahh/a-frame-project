@@ -5,41 +5,40 @@
   <title>Monochrome Linear Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
-    /* UI 스타일: 무채색, 단정, 차가움 */
+    /* 단정하고 깔끔한 무채색 UI */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
-      background: rgba(10, 11, 13, 0.85); padding: 18px;
+      background: rgba(15, 15, 15, 0.9); padding: 18px;
       border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
       width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.1);
-      color: #d1d5db; backdrop-filter: blur(5px);
+      color: #e5e5e5; backdrop-filter: blur(5px);
     }
     textarea { 
-      width: 100%; height: 80px; margin-bottom: 12px; padding: 10px; 
-      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.15); 
-      border-radius: 4px; line-height: 1.5; background: #16181d; color: #e5e7eb;
+      width: 100%; height: 85px; margin-bottom: 12px; padding: 10px; 
+      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 4px; line-height: 1.5; background: #222; color: #fff;
       font-family: inherit; font-size: 13px; outline: none;
     }
     button { 
-      width: 100%; padding: 12px; background: #f3f4f6; color: #111827; 
+      width: 100%; padding: 12px; background: #fff; color: #000; 
       border: none; border-radius: 4px; font-weight: bold; font-size: 13px; 
       cursor: pointer; transition: 0.2s; letter-spacing: 1px; margin-bottom: 8px;
     }
-    button:hover { background: #d1d5db; }
+    button:hover { background: #ccc; }
     
-    /* 아이패드 터치용 [벽 올리기] 버튼 (우측 하단) */
+    /* 화면 터치용 [벽 올리기] 버튼 */
     #shiftBtn {
       position: absolute; bottom: 30px; right: 30px; z-index: 1000;
-      width: 80px; height: 80px; background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
+      width: 80px; height: 80px; background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50%;
       color: white; font-size: 14px; font-weight: bold; cursor: pointer;
       backdrop-filter: blur(4px); transition: 0.2s;
     }
-    #shiftBtn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
-
-    .back-btn { display: inline-block; margin-bottom: 12px; color: #9ca3af; text-decoration: none; font-size: 12px; }
+    #shiftBtn:active { background: rgba(255, 255, 255, 0.4); transform: scale(0.95); }
+    .back-btn { display: inline-block; margin-bottom: 12px; color: #aaa; text-decoration: none; font-size: 12px; }
   </style>
 
-  <!-- 벽 통과 강제 차단 스크립트 (열린 벽은 통과 허용) -->
+  <!-- 벽 통과 물리 충돌 방지 (올라간 벽은 통과 허용) -->
   <script>
     AFRAME.registerComponent('wall-collider', {
       init: function () { this.playerRadius = 0.5; },
@@ -48,7 +47,7 @@
         const walls = document.querySelectorAll('.solid-wall');
         
         walls.forEach(wall => {
-          // 벽이 'lifted(열림)' 상태면 충돌 무시
+          // 부모 그룹이 열림(lifted) 상태면 충돌 무시
           if (wall.parentElement.dataset.lifted === "true") return;
 
           const mesh = wall.getObject3D('mesh');
@@ -78,28 +77,25 @@
 
   <div id="ui-container">
     <a href="index.html" class="back-btn">← 메인 서재로 돌아가기</a>
-    <h3 style="margin: 0 0 10px 0; color: #f3f4f6; letter-spacing: 2px;">THE LINEAR ARCHIVE</h3>
+    <h3 style="margin: 0 0 10px 0; letter-spacing: 2px;">THE LINEAR ARCHIVE</h3>
     <textarea id="textInput">In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since. "Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven't had the advantages that you've had."</textarea>
     <button id="generateBtn">직선 갤러리 렌더링</button>
   </div>
 
-  <!-- 아이패드 유저를 위한 화면 터치용 Shift 버튼 -->
   <button id="shiftBtn">SHIFT<br>(Lift)</button>
 
   <a-scene>
-    <!-- 차갑고 단정한 무채색 환경 -->
-    <a-sky color="#050608"></a-sky> <!-- 거의 검은색에 가까운 심해톤 -->
-    
-    <!-- 끝없이 펼쳐진 검은/진회색 바닥 -->
-    <a-plane position="0 0 -50" rotation="-90 0 0" width="15" height="300" color="#0c0d0f" material="roughness: 1; metalness: 0"></a-plane>
+    <!-- 까만 주변 환경과 진회색 바닥 -->
+    <a-sky color="#050505"></a-sky>
+    <a-plane position="0 0 -50" rotation="-90 0 0" width="12" height="300" color="#1a1a1a" material="roughness: 0.9"></a-plane>
 
-    <!-- 은은하고 차가운 기본 조명 -->
-    <a-light type="ambient" color="#ffffff" intensity="0.15"></a-light>
+    <!-- 전체 갤러리 기본 조명 (선명하게) -->
+    <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 플레이어 시작 위치 (Z=3, 정면 0을 바라봄) -->
-    <a-entity id="player" position="0 0 3" wall-collider>
+    <!-- 시작 위치: 첫 벽(z=0)에서 4미터 앞 -->
+    <a-entity id="player" position="0 0 4" wall-collider>
       <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
         <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
       </a-camera>
@@ -107,86 +103,49 @@
   </a-scene>
 
   <script>
-    // 텍스트를 적정 길이와 쉼표 기준으로 깔끔하게 자르는 마법의 함수
-    function splitTextSmart(text) {
-      const MAX_LEN = 75; // 한 벽에 들어갈 최대 글자 수 (이 이상이면 자름)
-      const rawSentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-      const chunks = [];
-
-      rawSentences.forEach(sentence => {
-        let str = sentence.trim();
-        while (str.length > MAX_LEN) {
-          // 문장 중간(40~60% 지점)에서 쉼표(,)나 띄어쓰기를 찾음
-          const mid = Math.floor(str.length / 2);
-          const searchArea = str.substring(mid - 15, mid + 20);
-          
-          let splitIdx = -1;
-          const commaIdx = searchArea.lastIndexOf(',');
-          
-          if (commaIdx !== -1) {
-            splitIdx = (mid - 15) + commaIdx; // 쉼표에서 자름
-          } else {
-            const spaceIdx = searchArea.lastIndexOf(' ');
-            if (spaceIdx !== -1) {
-              splitIdx = (mid - 15) + spaceIdx; // 띄어쓰기에서 자름
-            } else {
-              splitIdx = MAX_LEN; // 정 안되면 강제로 자름
-            }
-          }
-
-          chunks.push(str.substring(0, splitIdx + 1).trim());
-          str = str.substring(splitIdx + 1).trim();
-        }
-        if (str.length > 0) chunks.push(str);
-      });
-      return chunks;
-    }
-
     function buildLinearGallery() {
       const text = document.getElementById('textInput').value;
-      const chunks = splitTextSmart(text);
+      // 문장 단위로 깔끔하게 쪼개기 (텍스트 겹침 방지)
+      const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
       container.innerHTML = '';
 
-      const spacing = 4.5; // 벽 사이의 거리 (약 3걸음)
+      const spacing = 5; // 벽 사이의 거리 (5미터 간격)
 
       chunks.forEach((chunk, i) => {
-        const z = - (i * spacing); // 앞(음수 Z)으로 쭉쭉 배치
+        const z = - (i * spacing);
 
-        // 벽을 감싸는 그룹 (나중에 통째로 위로 올리기 위해)
         const wallGroup = document.createElement('a-entity');
-        wallGroup.setAttribute('position', `0 1.5 ${z}`);
-        wallGroup.setAttribute('class', 'door-wall-group'); // 찾기 위한 이름표
-        wallGroup.dataset.lifted = "false"; // 처음엔 닫혀있음
+        // ★ Y를 1.75로 맞추어 벽이 바닥에 완벽히 얹히도록 수정
+        wallGroup.setAttribute('position', `0 1.75 ${z}`);
+        wallGroup.setAttribute('class', 'door-wall-group');
+        wallGroup.dataset.lifted = "false";
 
-        // 하얗고 단정한 무채색 벽
+        // 깨끗한 흰색 벽
         const wall = document.createElement('a-box');
-        wall.setAttribute('width', '5.5');
+        wall.setAttribute('width', '6.0');
         wall.setAttribute('height', '3.5');
-        wall.setAttribute('depth', '0.15');
-        wall.setAttribute('color', '#f3f4f6');
-        wall.setAttribute('material', 'roughness: 0.9');
-        wall.setAttribute('class', 'solid-wall'); // 물리 충돌 대상
+        wall.setAttribute('depth', '0.2');
+        wall.setAttribute('color', '#ffffff');
+        wall.setAttribute('material', 'roughness: 0.95');
+        wall.setAttribute('class', 'solid-wall');
 
-        // 차분한 텍스트
+        // 정중앙 검정색 텍스트
         const textEl = document.createElement('a-text');
-        textEl.setAttribute('value', chunk);
+        textEl.setAttribute('value', chunk.trim());
         textEl.setAttribute('align', 'center');
-        textEl.setAttribute('width', '4.8');
+        textEl.setAttribute('width', '5.2');
         textEl.setAttribute('wrap-count', '35');
-        textEl.setAttribute('position', `0 0 0.08`);
-        textEl.setAttribute('color', '#111827');
-        textEl.setAttribute('font', 'sourcecodepro');
+        textEl.setAttribute('position', `0 0 0.12`);
+        textEl.setAttribute('color', '#000000'); // ★ 완전한 검정색
 
-        // ★ 위에서 벽을 차갑게 내리쬐는 스포트라이트 조명
+        // 벽 표면을 예쁘게 밝혀주는 웜톤 갤러리 조명
         const light = document.createElement('a-light');
-        light.setAttribute('type', 'spot');
-        light.setAttribute('color', '#e0e7ff'); // 아주 연한 차가운 블루화이트
-        light.setAttribute('intensity', '1.5');
-        light.setAttribute('angle', '45');
-        light.setAttribute('penumbra', '0.5');
-        light.setAttribute('position', '0 3 1.5'); // 벽 위쪽 앞
-        light.setAttribute('target', wallGroup); // 벽을 향해 쏨
+        light.setAttribute('type', 'point');
+        light.setAttribute('color', '#fff5e6');
+        light.setAttribute('intensity', '0.8');
+        light.setAttribute('distance', '7');
+        light.setAttribute('position', '0 1 2');
 
         wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
@@ -195,7 +154,7 @@
       });
     }
 
-    // [핵심] Shift 키보드 또는 화면 버튼을 누르면 가장 가까운 앞쪽 벽이 위로 열림
+    // 벽 들어올리기 함수 (인식 범위 대폭 확대)
     function liftClosestWall() {
       const playerPos = document.getElementById('player').object3D.position;
       const walls = document.querySelectorAll('.door-wall-group');
@@ -203,34 +162,34 @@
       let closestWall = null;
       let minDist = Infinity;
 
-      // 내 앞에 있는 가장 가까운 벽 찾기
       walls.forEach(group => {
+        if (group.dataset.lifted === "true") return; // 이미 열린 벽 패스
+        
         const wallZ = group.object3D.position.z;
         const distZ = playerPos.z - wallZ; 
         
-        // 내 앞쪽(거리가 0보다 큼)에 있고 4미터 이내인 벽
-        if (distZ > 0 && distZ < 4.5 && group.dataset.lifted === "false") {
-          if (distZ < minDist) {
-            minDist = distZ;
+        // ★ 인식 범위: 벽 8미터 앞부터 ~ 벽 1미터 뒤까지 모두 작동하게 변경
+        if (distZ > -1.0 && distZ < 8.0) {
+          if (Math.abs(distZ) < minDist) {
+            minDist = Math.abs(distZ);
             closestWall = group;
           }
         }
       });
 
-      // 벽을 찾았으면 위로 4미터 부드럽게 들어 올리기
+      // 가장 가까운 벽을 6미터 위로 올림
       if (closestWall) {
-        closestWall.dataset.lifted = "true"; // 충돌 판정 해제
+        closestWall.dataset.lifted = "true"; 
         const currentZ = closestWall.getAttribute('position').z;
-        closestWall.setAttribute('animation', `property: position; to: 0 5 ${currentZ}; dur: 1500; easing: easeInOutCubic`);
+        // 스르륵 올라가는 애니메이션
+        closestWall.setAttribute('animation', `property: position; to: 0 6 ${currentZ}; dur: 1500; easing: easeInOutCubic`);
       }
     }
 
-    // 1. 키보드 Shift 키 감지
+    // Shift 키 또는 화면 버튼 클릭 시 작동
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Shift') liftClosestWall();
     });
-
-    // 2. 아이패드용 화면 터치 버튼 감지
     document.getElementById('shiftBtn').addEventListener('click', liftClosestWall);
 
     // 실행
