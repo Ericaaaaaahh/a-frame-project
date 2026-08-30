@@ -5,6 +5,7 @@
   <title>Monochrome Linear Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
+    /* 기존 UI 창 */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
       background: rgba(15, 15, 15, 0.9); padding: 18px;
@@ -18,13 +19,26 @@
       border-radius: 4px; line-height: 1.5; background: #222; color: #fff;
       font-family: inherit; font-size: 13px; outline: none;
     }
-    button { 
+    button.render-btn { 
       width: 100%; padding: 12px; background: #fff; color: #000; 
       border: none; border-radius: 4px; font-weight: bold; font-size: 13px; 
       cursor: pointer; transition: 0.2s; letter-spacing: 1px; margin-bottom: 8px;
     }
-    button:hover { background: #ccc; }
+    button.render-btn:hover { background: #ccc; }
     
+    /* ★ 새로 추가된 [텍스트 입력 열기] 작은 버튼 */
+    #toggleUiBtn {
+      position: absolute; top: 20px; left: 20px; z-index: 1000;
+      background: rgba(15, 15, 15, 0.9); padding: 10px 16px;
+      border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.2); color: #e5e5e5;
+      font-family: 'Georgia', serif; font-size: 13px; font-weight: bold;
+      cursor: pointer; backdrop-filter: blur(5px); 
+      display: none; /* 처음에는 숨겨둠 */
+    }
+    #toggleUiBtn:hover { background: rgba(50, 50, 50, 0.9); }
+
+    /* 화면 터치용 [벽 올리기] 버튼 */
     #shiftBtn {
       position: absolute; bottom: 30px; right: 30px; z-index: 1000;
       width: 80px; height: 80px; background: rgba(255, 255, 255, 0.15);
@@ -72,11 +86,14 @@
 </head>
 <body>
 
+  <!-- ★ 렌더링 후 나타날 작은 열기 버튼 -->
+  <button id="toggleUiBtn">📝 텍스트 입력하기</button>
+
   <div id="ui-container">
     <a href="index.html" class="back-btn">← 메인 서재로 돌아가기</a>
     <h3 style="margin: 0 0 10px 0; letter-spacing: 2px;">THE LINEAR ARCHIVE</h3>
     <textarea id="textInput">Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do. Once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it. "And what is the use of a book," thought Alice, "without pictures or conversations?" So she was considering in her own mind whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies. When suddenly a White Rabbit with pink eyes ran close by her!</textarea>
-    <button id="generateBtn">직선 갤러리 렌더링</button>
+    <button id="generateBtn" class="render-btn">직선 갤러리 렌더링</button>
   </div>
 
   <button id="shiftBtn">SHIFT<br>(Lift)</button>
@@ -91,8 +108,9 @@
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 영혼(카메라)과 육체(아이디)를 하나로 합침! 이제 걸어가는 거리를 실시간으로 정확히 잽니다. -->
-    <a-camera id="player" position="0 1.6 4" look-controls wasd-controls="acceleration: 45" wall-collider>
+    <!-- ★ 아이패드 기울기 추적 해제 (magicWindowTrackingEnabled: false) -->
+    <!-- 이제 기기를 들고 움직이지 않아도 손가락 터치 드래그만으로 고개를 돌릴 수 있습니다. -->
+    <a-camera id="player" position="0 1.6 4" look-controls="magicWindowTrackingEnabled: false" wasd-controls="acceleration: 45" wall-collider>
       <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
     </a-camera>
   </a-scene>
@@ -145,7 +163,6 @@
     }
 
     function liftClosestWall() {
-      // 이제 id="player"가 카메라 그 자체이므로, 실시간 내 위치를 정확히 가져옵니다.
       const playerPos = document.getElementById('player').object3D.position;
       const walls = document.querySelectorAll('.door-wall-group');
       
@@ -158,7 +175,6 @@
         const wallZ = group.object3D.position.z;
         const distZ = playerPos.z - wallZ; 
         
-        // 내 앞 8미터 이내, 등 뒤 2미터 이내에 있는 닫힌 벽은 모두 열 수 있게 판정 폭을 확 넓혔습니다.
         if (distZ > -2.0 && distZ < 8.0) {
           if (Math.abs(distZ) < minDist) {
             minDist = Math.abs(distZ);
@@ -167,7 +183,6 @@
         }
       });
 
-      // 가장 가까운 벽을 위로 스르륵 올립니다.
       if (closestWall) {
         closestWall.dataset.lifted = "true"; 
         const currentZ = closestWall.getAttribute('position').z;
@@ -175,12 +190,31 @@
       }
     }
 
+    // ★ UI 숨기기 / 나타내기 로직
+    const uiContainer = document.getElementById('ui-container');
+    const toggleUiBtn = document.getElementById('toggleUiBtn');
+    const generateBtn = document.getElementById('generateBtn');
+
+    // 1. 렌더링 버튼을 누르면 갤러리 생성 + 큰 창 숨기고 작은 버튼 나타내기
+    generateBtn.addEventListener('click', () => {
+      buildLinearGallery();
+      uiContainer.style.display = 'none';
+      toggleUiBtn.style.display = 'block';
+    });
+
+    // 2. 작은 버튼을 누르면 다시 큰 창 나타내기
+    toggleUiBtn.addEventListener('click', () => {
+      uiContainer.style.display = 'block';
+      toggleUiBtn.style.display = 'none';
+    });
+
+    // 쉬프트 키 및 터치 조작 연결
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Shift') liftClosestWall();
     });
     document.getElementById('shiftBtn').addEventListener('click', liftClosestWall);
 
-    document.getElementById('generateBtn').addEventListener('click', buildLinearGallery);
+    // 페이지 접속 시 기본 렌더링
     window.addEventListener('load', buildLinearGallery);
   </script>
 </body>
