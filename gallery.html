@@ -2,66 +2,72 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Random 90-Degree Text Gallery</title>
+  <title>Monochrome Linear Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
+    /* UI 스타일: 무채색, 단정, 차가움 */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
-      background: rgba(15, 16, 21, 0.92); padding: 16px;
-      border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.15);
-      color: #e2d9c8;
+      background: rgba(10, 11, 13, 0.85); padding: 18px;
+      border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      width: 320px; font-family: 'Georgia', serif; border: 1px solid rgba(255,255,255,0.1);
+      color: #d1d5db; backdrop-filter: blur(5px);
     }
     textarea { 
-      width: 100%; height: 90px; margin-bottom: 10px; padding: 8px; 
-      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
-      border-radius: 4px; line-height: 1.4; background: #08090d; color: #fff;
-      font-family: inherit; font-size: 13px;
+      width: 100%; height: 80px; margin-bottom: 12px; padding: 10px; 
+      box-sizing: border-box; border: 1px solid rgba(255,255,255,0.15); 
+      border-radius: 4px; line-height: 1.5; background: #16181d; color: #e5e7eb;
+      font-family: inherit; font-size: 13px; outline: none;
     }
     button { 
-      width: 100%; padding: 12px; background: #c5a059; color: #000; 
-      border: none; border-radius: 5px; font-weight: bold; font-size: 14px; 
-      cursor: pointer; transition: 0.2s; 
+      width: 100%; padding: 12px; background: #f3f4f6; color: #111827; 
+      border: none; border-radius: 4px; font-weight: bold; font-size: 13px; 
+      cursor: pointer; transition: 0.2s; letter-spacing: 1px; margin-bottom: 8px;
     }
-    button:hover { background: #dfb96c; }
+    button:hover { background: #d1d5db; }
+    
+    /* 아이패드 터치용 [벽 올리기] 버튼 (우측 하단) */
+    #shiftBtn {
+      position: absolute; bottom: 30px; right: 30px; z-index: 1000;
+      width: 80px; height: 80px; background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
+      color: white; font-size: 14px; font-weight: bold; cursor: pointer;
+      backdrop-filter: blur(4px); transition: 0.2s;
+    }
+    #shiftBtn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
+
+    .back-btn { display: inline-block; margin-bottom: 12px; color: #9ca3af; text-decoration: none; font-size: 12px; }
   </style>
 
+  <!-- 벽 통과 강제 차단 스크립트 (열린 벽은 통과 허용) -->
   <script>
-    // 물리 엔진: 안전한 Three.js Box3 월드 좌표 계산
     AFRAME.registerComponent('wall-collider', {
-      init: function () {
-        this.playerRadius = 0.6;
-        this.tempBox = new THREE.Box3();
-        this.closestPoint = new THREE.Vector3();
-        this.pushDir = new THREE.Vector3();
-      },
+      init: function () { this.playerRadius = 0.5; },
       tick: function () {
         const playerPos = this.el.object3D.position;
         const walls = document.querySelectorAll('.solid-wall');
-        if (!walls || walls.length === 0) return;
-
+        
         walls.forEach(wall => {
+          // 벽이 'lifted(열림)' 상태면 충돌 무시
+          if (wall.parentElement.dataset.lifted === "true") return;
+
           const mesh = wall.getObject3D('mesh');
           if (!mesh) return;
 
-          // 월드 매트릭스 갱신 후 바운딩 박스 계산
-          mesh.updateMatrixWorld();
-          this.tempBox.setFromObject(mesh);
+          const box = new THREE.Box3().setFromObject(mesh);
+          const closestPoint = new THREE.Vector3();
+          box.clampPoint(playerPos, closestPoint);
+          closestPoint.y = playerPos.y; 
+
+          const dist = Math.hypot(playerPos.x - closestPoint.x, playerPos.z - closestPoint.z);
           
-          this.tempBox.clampPoint(playerPos, this.closestPoint);
-          const distance = playerPos.distanceTo(this.closestPoint);
-          
-          if (distance < this.playerRadius) {
-            const overlap = this.playerRadius - distance;
-            this.pushDir.subVectors(playerPos, this.closestPoint);
-            this.pushDir.y = 0; 
+          if (dist < this.playerRadius) {
+            const overlap = this.playerRadius - dist;
+            const pushDir = new THREE.Vector3(playerPos.x - closestPoint.x, 0, playerPos.z - closestPoint.z);
+            if (pushDir.lengthSq() === 0) pushDir.set(0, 0, 1);
+            else pushDir.normalize();
             
-            if (this.pushDir.lengthSq() === 0) {
-              this.pushDir.set(0, 0, 1);
-            } else {
-              this.pushDir.normalize();
-            }
-            playerPos.add(this.pushDir.multiplyScalar(overlap));
+            playerPos.add(pushDir.multiplyScalar(overlap));
           }
         });
       }
@@ -71,128 +77,165 @@
 <body>
 
   <div id="ui-container">
-    <h3 style="margin: 0 0 10px 0; color: #c5a059; font-size: 16px;">90도 연결 텍스트 갤러리</h3>
-    <textarea id="textInput">CHAPTER I. Down the Rabbit-Hole. Alice was beginning to get very tired of sitting by her sister on the bank. She had peeped into the book her sister was reading, but it had no pictures or conversations in it. What is the use of a book without pictures or conversations, thought Alice.</textarea>
-    <button id="generateBtn" type="button">새로운 갤러리 생성</button>
+    <a href="index.html" class="back-btn">← 메인 서재로 돌아가기</a>
+    <h3 style="margin: 0 0 10px 0; color: #f3f4f6; letter-spacing: 2px;">THE LINEAR ARCHIVE</h3>
+    <textarea id="textInput">In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since. "Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven't had the advantages that you've had."</textarea>
+    <button id="generateBtn">직선 갤러리 렌더링</button>
   </div>
 
-  <a-scene id="mainScene">
-    <a-sky color="#030305"></a-sky>
-    <a-plane position="0 0 0" rotation="-90 0 0" width="1000" height="1000" color="#14151a" material="roughness: 0.85"></a-plane>
-    <a-light type="ambient" color="#ffffff" intensity="0.35"></a-light>
+  <!-- 아이패드 유저를 위한 화면 터치용 Shift 버튼 -->
+  <button id="shiftBtn">SHIFT<br>(Lift)</button>
+
+  <a-scene>
+    <!-- 차갑고 단정한 무채색 환경 -->
+    <a-sky color="#050608"></a-sky> <!-- 거의 검은색에 가까운 심해톤 -->
+    
+    <!-- 끝없이 펼쳐진 검은/진회색 바닥 -->
+    <a-plane position="0 0 -50" rotation="-90 0 0" width="15" height="300" color="#0c0d0f" material="roughness: 1; metalness: 0"></a-plane>
+
+    <!-- 은은하고 차가운 기본 조명 -->
+    <a-light type="ambient" color="#ffffff" intensity="0.15"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 플레이어 위치 초기화 & 물리 충돌 -->
-    <a-entity id="player" position="0 0 0" wall-collider>
-      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 60">
-        <a-cursor color="#c5a059"></a-cursor>
+    <!-- 플레이어 시작 위치 (Z=3, 정면 0을 바라봄) -->
+    <a-entity id="player" position="0 0 3" wall-collider>
+      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
+        <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
       </a-camera>
     </a-entity>
   </a-scene>
 
   <script>
-    const scene = document.querySelector('a-scene');
+    // 텍스트를 적정 길이와 쉼표 기준으로 깔끔하게 자르는 마법의 함수
+    function splitTextSmart(text) {
+      const MAX_LEN = 75; // 한 벽에 들어갈 최대 글자 수 (이 이상이면 자름)
+      const rawSentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+      const chunks = [];
 
-    function initGallery() {
-      const btn = document.getElementById('generateBtn');
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        buildZigzagGallery();
+      rawSentences.forEach(sentence => {
+        let str = sentence.trim();
+        while (str.length > MAX_LEN) {
+          // 문장 중간(40~60% 지점)에서 쉼표(,)나 띄어쓰기를 찾음
+          const mid = Math.floor(str.length / 2);
+          const searchArea = str.substring(mid - 15, mid + 20);
+          
+          let splitIdx = -1;
+          const commaIdx = searchArea.lastIndexOf(',');
+          
+          if (commaIdx !== -1) {
+            splitIdx = (mid - 15) + commaIdx; // 쉼표에서 자름
+          } else {
+            const spaceIdx = searchArea.lastIndexOf(' ');
+            if (spaceIdx !== -1) {
+              splitIdx = (mid - 15) + spaceIdx; // 띄어쓰기에서 자름
+            } else {
+              splitIdx = MAX_LEN; // 정 안되면 강제로 자름
+            }
+          }
+
+          chunks.push(str.substring(0, splitIdx + 1).trim());
+          str = str.substring(splitIdx + 1).trim();
+        }
+        if (str.length > 0) chunks.push(str);
       });
-
-      buildZigzagGallery();
+      return chunks;
     }
 
-    // A-Frame 씬 준비 완료 시점 보장
-    if (scene.hasLoaded) {
-      initGallery();
-    } else {
-      scene.addEventListener('loaded', initGallery);
-    }
-
-    function buildZigzagGallery() {
-      const inputEl = document.getElementById('textInput');
-      const text = inputEl ? inputEl.value.trim() : '';
-      if (!text) return;
-
-      const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    function buildLinearGallery() {
+      const text = document.getElementById('textInput').value;
+      const chunks = splitTextSmart(text);
       const container = document.getElementById('gallery-container');
-      
-      // 기존 벽 완전히 비우기
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
-      }
+      container.innerHTML = '';
 
-      // 플레이어 위치를 입구 시작점으로 리셋
-      const player = document.getElementById('player');
-      if (player) {
-        player.setAttribute('position', '0 0 0');
-      }
+      const spacing = 4.5; // 벽 사이의 거리 (약 3걸음)
 
-      const wallLength = 6;
-      const wallThickness = 0.3;
-      const H = wallLength / 2;
+      chunks.forEach((chunk, i) => {
+        const z = - (i * spacing); // 앞(음수 Z)으로 쭉쭉 배치
 
-      const dirVectors = [
-        { dx: 0, dz: -1 }, // 북
-        { dx: 1, dz: 0 },  // 동
-        { dx: 0, dz: 1 },  // 남
-        { dx: -1, dz: 0 }  // 서
-      ];
-
-      let curDir = 0;
-      let curX = 0;
-      let curZ = -H;
-
-      sentences.forEach((sentence) => {
-        const cleanText = sentence.trim();
-        if (!cleanText) return;
-
+        // 벽을 감싸는 그룹 (나중에 통째로 위로 올리기 위해)
         const wallGroup = document.createElement('a-entity');
-        wallGroup.setAttribute('position', `${curX} 1.5 ${curZ}`);
-        wallGroup.setAttribute('rotation', `0 ${curDir * -90} 0`);
+        wallGroup.setAttribute('position', `0 1.5 ${z}`);
+        wallGroup.setAttribute('class', 'door-wall-group'); // 찾기 위한 이름표
+        wallGroup.dataset.lifted = "false"; // 처음엔 닫혀있음
 
+        // 하얗고 단정한 무채색 벽
         const wall = document.createElement('a-box');
-        wall.setAttribute('width', wallLength);
+        wall.setAttribute('width', '5.5');
         wall.setAttribute('height', '3.5');
-        wall.setAttribute('depth', wallThickness);
-        wall.setAttribute('color', '#f5f5f7');
+        wall.setAttribute('depth', '0.15');
+        wall.setAttribute('color', '#f3f4f6');
         wall.setAttribute('material', 'roughness: 0.9');
-        wall.setAttribute('class', 'solid-wall');
+        wall.setAttribute('class', 'solid-wall'); // 물리 충돌 대상
 
+        // 차분한 텍스트
         const textEl = document.createElement('a-text');
-        textEl.setAttribute('value', cleanText);
+        textEl.setAttribute('value', chunk);
         textEl.setAttribute('align', 'center');
-        textEl.setAttribute('width', '5.2');
-        textEl.setAttribute('wrap-count', '30');
-        textEl.setAttribute('position', `0 0 ${wallThickness / 2 + 0.05}`);
-        textEl.setAttribute('color', '#111111');
+        textEl.setAttribute('width', '4.8');
+        textEl.setAttribute('wrap-count', '35');
+        textEl.setAttribute('position', `0 0 0.08`);
+        textEl.setAttribute('color', '#111827');
+        textEl.setAttribute('font', 'sourcecodepro');
 
+        // ★ 위에서 벽을 차갑게 내리쬐는 스포트라이트 조명
         const light = document.createElement('a-light');
-        light.setAttribute('type', 'point');
-        light.setAttribute('color', '#fff4e0');
-        light.setAttribute('intensity', '0.6');
-        light.setAttribute('distance', '6');
-        light.setAttribute('position', '0 1 1.8');
+        light.setAttribute('type', 'spot');
+        light.setAttribute('color', '#e0e7ff'); // 아주 연한 차가운 블루화이트
+        light.setAttribute('intensity', '1.5');
+        light.setAttribute('angle', '45');
+        light.setAttribute('penumbra', '0.5');
+        light.setAttribute('position', '0 3 1.5'); // 벽 위쪽 앞
+        light.setAttribute('target', wallGroup); // 벽을 향해 쏨
 
         wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
         wallGroup.appendChild(light);
         container.appendChild(wallGroup);
-
-        const possibleTurns = [0, 1, -1];
-        const turn = possibleTurns[Math.floor(Math.random() * possibleTurns.length)];
-        const nextDir = (curDir + turn + 4) % 4;
-
-        const vCur = dirVectors[curDir];
-        const vNext = dirVectors[nextDir];
-
-        curX = curX + (H * vCur.dx) + (H * vNext.dx);
-        curZ = curZ + (H * vCur.dz) + (H * vNext.dz);
-        curDir = nextDir;
       });
     }
+
+    // [핵심] Shift 키보드 또는 화면 버튼을 누르면 가장 가까운 앞쪽 벽이 위로 열림
+    function liftClosestWall() {
+      const playerPos = document.getElementById('player').object3D.position;
+      const walls = document.querySelectorAll('.door-wall-group');
+      
+      let closestWall = null;
+      let minDist = Infinity;
+
+      // 내 앞에 있는 가장 가까운 벽 찾기
+      walls.forEach(group => {
+        const wallZ = group.object3D.position.z;
+        const distZ = playerPos.z - wallZ; 
+        
+        // 내 앞쪽(거리가 0보다 큼)에 있고 4미터 이내인 벽
+        if (distZ > 0 && distZ < 4.5 && group.dataset.lifted === "false") {
+          if (distZ < minDist) {
+            minDist = distZ;
+            closestWall = group;
+          }
+        }
+      });
+
+      // 벽을 찾았으면 위로 4미터 부드럽게 들어 올리기
+      if (closestWall) {
+        closestWall.dataset.lifted = "true"; // 충돌 판정 해제
+        const currentZ = closestWall.getAttribute('position').z;
+        closestWall.setAttribute('animation', `property: position; to: 0 5 ${currentZ}; dur: 1500; easing: easeInOutCubic`);
+      }
+    }
+
+    // 1. 키보드 Shift 키 감지
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Shift') liftClosestWall();
+    });
+
+    // 2. 아이패드용 화면 터치 버튼 감지
+    document.getElementById('shiftBtn').addEventListener('click', liftClosestWall);
+
+    // 실행
+    document.getElementById('generateBtn').addEventListener('click', buildLinearGallery);
+    window.addEventListener('load', buildLinearGallery);
   </script>
 </body>
 </html>
