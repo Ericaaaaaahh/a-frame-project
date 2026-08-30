@@ -5,7 +5,6 @@
   <title>Monochrome Linear Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
-    /* 단정하고 깔끔한 무채색 UI */
     #ui-container {
       position: absolute; top: 20px; left: 20px; z-index: 1000;
       background: rgba(15, 15, 15, 0.9); padding: 18px;
@@ -14,7 +13,7 @@
       color: #e5e5e5; backdrop-filter: blur(5px);
     }
     textarea { 
-      width: 100%; height: 85px; margin-bottom: 12px; padding: 10px; 
+      width: 100%; height: 110px; margin-bottom: 12px; padding: 10px; 
       box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); 
       border-radius: 4px; line-height: 1.5; background: #222; color: #fff;
       font-family: inherit; font-size: 13px; outline: none;
@@ -26,7 +25,6 @@
     }
     button:hover { background: #ccc; }
     
-    /* 화면 터치용 [벽 올리기] 버튼 */
     #shiftBtn {
       position: absolute; bottom: 30px; right: 30px; z-index: 1000;
       width: 80px; height: 80px; background: rgba(255, 255, 255, 0.15);
@@ -38,7 +36,6 @@
     .back-btn { display: inline-block; margin-bottom: 12px; color: #aaa; text-decoration: none; font-size: 12px; }
   </style>
 
-  <!-- 벽 통과 물리 충돌 방지 (올라간 벽은 통과 허용) -->
   <script>
     AFRAME.registerComponent('wall-collider', {
       init: function () { this.playerRadius = 0.5; },
@@ -47,7 +44,6 @@
         const walls = document.querySelectorAll('.solid-wall');
         
         walls.forEach(wall => {
-          // 부모 그룹이 열림(lifted) 상태면 충돌 무시
           if (wall.parentElement.dataset.lifted === "true") return;
 
           const mesh = wall.getObject3D('mesh');
@@ -78,23 +74,22 @@
   <div id="ui-container">
     <a href="index.html" class="back-btn">← 메인 서재로 돌아가기</a>
     <h3 style="margin: 0 0 10px 0; letter-spacing: 2px;">THE LINEAR ARCHIVE</h3>
-    <textarea id="textInput">In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since. "Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven't had the advantages that you've had."</textarea>
+    <textarea id="textInput">Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do. Once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it. "And what is the use of a book," thought Alice, "without pictures or conversations?" So she was considering in her own mind whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies. When suddenly a White Rabbit with pink eyes ran close by her!</textarea>
     <button id="generateBtn">직선 갤러리 렌더링</button>
   </div>
 
   <button id="shiftBtn">SHIFT<br>(Lift)</button>
 
   <a-scene>
-    <!-- 까만 주변 환경과 진회색 바닥 -->
+    <!-- 까만 하늘과 진회색 바닥 -->
     <a-sky color="#050505"></a-sky>
     <a-plane position="0 0 -50" rotation="-90 0 0" width="12" height="300" color="#1a1a1a" material="roughness: 0.9"></a-plane>
 
-    <!-- 전체 갤러리 기본 조명 (선명하게) -->
+    <!-- 밝고 선명한 전체 조명 -->
     <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
 
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 시작 위치: 첫 벽(z=0)에서 4미터 앞 -->
     <a-entity id="player" position="0 0 4" wall-collider>
       <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
         <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
@@ -105,23 +100,21 @@
   <script>
     function buildLinearGallery() {
       const text = document.getElementById('textInput').value;
-      // 문장 단위로 깔끔하게 쪼개기 (텍스트 겹침 방지)
       const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
       const container = document.getElementById('gallery-container');
       container.innerHTML = '';
 
-      const spacing = 5; // 벽 사이의 거리 (5미터 간격)
+      const spacing = 5;
 
       chunks.forEach((chunk, i) => {
         const z = - (i * spacing);
 
         const wallGroup = document.createElement('a-entity');
-        // ★ Y를 1.75로 맞추어 벽이 바닥에 완벽히 얹히도록 수정
+        // ★ 벽이 바닥에 묻히지 않는 정확한 Y 좌표(1.75)
         wallGroup.setAttribute('position', `0 1.75 ${z}`);
         wallGroup.setAttribute('class', 'door-wall-group');
         wallGroup.dataset.lifted = "false";
 
-        // 깨끗한 흰색 벽
         const wall = document.createElement('a-box');
         wall.setAttribute('width', '6.0');
         wall.setAttribute('height', '3.5');
@@ -130,16 +123,16 @@
         wall.setAttribute('material', 'roughness: 0.95');
         wall.setAttribute('class', 'solid-wall');
 
-        // 정중앙 검정색 텍스트
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', chunk.trim());
         textEl.setAttribute('align', 'center');
         textEl.setAttribute('width', '5.2');
         textEl.setAttribute('wrap-count', '35');
         textEl.setAttribute('position', `0 0 0.12`);
-        textEl.setAttribute('color', '#000000'); // ★ 완전한 검정색
+        // ★ 완전한 검정 텍스트
+        textEl.setAttribute('color', '#000000'); 
 
-        // 벽 표면을 예쁘게 밝혀주는 웜톤 갤러리 조명
+        // ★ 자연스럽고 은은한 웜톤 갤러리 핀 조명
         const light = document.createElement('a-light');
         light.setAttribute('type', 'point');
         light.setAttribute('color', '#fff5e6');
@@ -154,7 +147,6 @@
       });
     }
 
-    // 벽 들어올리기 함수 (인식 범위 대폭 확대)
     function liftClosestWall() {
       const playerPos = document.getElementById('player').object3D.position;
       const walls = document.querySelectorAll('.door-wall-group');
@@ -163,12 +155,12 @@
       let minDist = Infinity;
 
       walls.forEach(group => {
-        if (group.dataset.lifted === "true") return; // 이미 열린 벽 패스
+        if (group.dataset.lifted === "true") return; 
         
         const wallZ = group.object3D.position.z;
         const distZ = playerPos.z - wallZ; 
         
-        // ★ 인식 범위: 벽 8미터 앞부터 ~ 벽 1미터 뒤까지 모두 작동하게 변경
+        // ★ 벽에서 8미터 떨어져 있어도 열리도록 넉넉한 범위 설정
         if (distZ > -1.0 && distZ < 8.0) {
           if (Math.abs(distZ) < minDist) {
             minDist = Math.abs(distZ);
@@ -177,22 +169,18 @@
         }
       });
 
-      // 가장 가까운 벽을 6미터 위로 올림
       if (closestWall) {
         closestWall.dataset.lifted = "true"; 
         const currentZ = closestWall.getAttribute('position').z;
-        // 스르륵 올라가는 애니메이션
         closestWall.setAttribute('animation', `property: position; to: 0 6 ${currentZ}; dur: 1500; easing: easeInOutCubic`);
       }
     }
 
-    // Shift 키 또는 화면 버튼 클릭 시 작동
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Shift') liftClosestWall();
     });
     document.getElementById('shiftBtn').addEventListener('click', liftClosestWall);
 
-    // 실행
     document.getElementById('generateBtn').addEventListener('click', buildLinearGallery);
     window.addEventListener('load', buildLinearGallery);
   </script>
