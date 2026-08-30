@@ -36,6 +36,7 @@
     .back-btn { display: inline-block; margin-bottom: 12px; color: #aaa; text-decoration: none; font-size: 12px; }
   </style>
 
+  <!-- 벽 통과 강제 차단 스크립트 -->
   <script>
     AFRAME.registerComponent('wall-collider', {
       init: function () { this.playerRadius = 0.5; },
@@ -90,11 +91,10 @@
 
     <a-entity id="gallery-container"></a-entity>
 
-    <a-entity id="player" position="0 0 4" wall-collider>
-      <a-camera position="0 1.6 0" look-controls wasd-controls="acceleration: 45">
-        <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
-      </a-camera>
-    </a-entity>
+    <!-- ★ 영혼(카메라)과 육체(아이디)를 하나로 합침! 이제 걸어가는 거리를 실시간으로 정확히 잽니다. -->
+    <a-camera id="player" position="0 1.6 4" look-controls wasd-controls="acceleration: 45" wall-collider>
+      <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
+    </a-camera>
   </a-scene>
 
   <script>
@@ -110,7 +110,6 @@
         const z = - (i * spacing);
 
         const wallGroup = document.createElement('a-entity');
-        // ★ 벽이 바닥에 묻히지 않는 정확한 Y 좌표(1.75)
         wallGroup.setAttribute('position', `0 1.75 ${z}`);
         wallGroup.setAttribute('class', 'door-wall-group');
         wallGroup.dataset.lifted = "false";
@@ -129,10 +128,8 @@
         textEl.setAttribute('width', '5.2');
         textEl.setAttribute('wrap-count', '35');
         textEl.setAttribute('position', `0 0 0.12`);
-        // ★ 완전한 검정 텍스트
         textEl.setAttribute('color', '#000000'); 
 
-        // ★ 자연스럽고 은은한 웜톤 갤러리 핀 조명
         const light = document.createElement('a-light');
         light.setAttribute('type', 'point');
         light.setAttribute('color', '#fff5e6');
@@ -148,6 +145,7 @@
     }
 
     function liftClosestWall() {
+      // 이제 id="player"가 카메라 그 자체이므로, 실시간 내 위치를 정확히 가져옵니다.
       const playerPos = document.getElementById('player').object3D.position;
       const walls = document.querySelectorAll('.door-wall-group');
       
@@ -160,8 +158,8 @@
         const wallZ = group.object3D.position.z;
         const distZ = playerPos.z - wallZ; 
         
-        // ★ 벽에서 8미터 떨어져 있어도 열리도록 넉넉한 범위 설정
-        if (distZ > -1.0 && distZ < 8.0) {
+        // 내 앞 8미터 이내, 등 뒤 2미터 이내에 있는 닫힌 벽은 모두 열 수 있게 판정 폭을 확 넓혔습니다.
+        if (distZ > -2.0 && distZ < 8.0) {
           if (Math.abs(distZ) < minDist) {
             minDist = Math.abs(distZ);
             closestWall = group;
@@ -169,6 +167,7 @@
         }
       });
 
+      // 가장 가까운 벽을 위로 스르륵 올립니다.
       if (closestWall) {
         closestWall.dataset.lifted = "true"; 
         const currentZ = closestWall.getAttribute('position').z;
