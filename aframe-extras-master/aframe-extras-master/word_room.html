@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Voca Room</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <style>
+    :root { --p: #2e7d32; --bg: #f8fafc; --bdr: #e2e8f0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); }
+    .container { max-width: 800px; margin: 24px auto; padding: 0 16px; }
+    
+    .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--bdr); margin-bottom: 16px; }
+    .flex-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid var(--bdr); border-radius: 6px; font-size: 14px; }
+    .btn { background: var(--p); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+    /* 3D 방 뷰 */
+    #room-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; }
+    #exit-btn { position: absolute; top: 16px; right: 16px; z-index: 1000; background: #c62828; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+    /* 단어 팝업 */
+    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1001; }
+    #modal h3 { color: var(--p); margin-bottom: 8px; }
+    #modal p { font-size: 13px; margin: 6px 0; line-height: 1.4; }
+    .m-btns { display: flex; gap: 8px; margin-top: 14px; }
+    .m-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .m-hard { background: #ffebee; color: #c62828; }
+    .m-easy { background: #e8f5e9; color: var(--p); }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="hub-view">
+    <div class="top-bar">
+      <a href="planner.html" style="text-decoration:none; color:#64748b; font-weight:600;">← 플래너로 돌아가기</a>
+      <span style="font-weight:bold; color:var(--p);">🏛️ 단어 보관소 & 방 생성기</span>
+    </div>
+
+    <!-- 단어 추가 DB -->
+    <div class="card">
+      <h3 style="margin-bottom:12px; font-size:16px;">➕ 단어 DB 등록</h3>
+      <div class="flex-row">
+        <input type="text" id="w-word" placeholder="단어 (예: mitochondria)">
+        <input type="text" id="w-meaning" placeholder="뜻">
+      </div>
+      <div class="flex-row">
+        <input type="text" id="w-collocation" placeholder="연어 (Collocation)">
+        <input type="text" id="w-example" placeholder="예문">
+      </div>
+      <button class="btn" onclick="saveWord()">데이터베이스에 저장</button>
+    </div>
+
+    <!-- 방 생성 설정 -->
+    <div class="card" style="text-align: center; padding: 30px;">
+      <h3 style="font-size: 18px; margin-bottom: 8px;">🚪 3D 단어 방 입장</h3>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+        복습 주기(망각 곡선)가 된 단어와 새 단어를 선별합니다.
+      </p>
+      <label style="font-size: 14px; font-weight: 600;">배치할 단어 개수: </label>
+      <select id="count-sel" style="width: auto; padding: 6px 12px; margin-bottom: 20px;">
+        <option value="8">8개</option>
+        <option value="12">12개</option>
+        <option value="16" selected>16개</option>
+        <option value="20">20개</option>
+      </select>
+      <br>
+      <button class="btn" style="font-size: 16px; padding: 10px 24px;" onclick="startRoom()">방 생성하고 입장하기</button>
+    </div>
+  </div>
+
+  <!-- 3D 뷰 -->
+  <div id="room-view">
+    <button id="exit-btn" onclick="closeRoom()">방 나가기</button>
+    <div id="modal">
+      <h3 id="m-word">Word</h3>
+      <p><strong>뜻:</strong> <span id="m-mean"></span></p>
+      <p><strong>연어:</strong> <span id="m-col"></span></p>
+      <p><strong>예문:</strong> <span id="m-ex"></span></p>
+      <div class="m-btns">
+        <button class="m-btn m-hard" onclick="answerWord(false)">헷갈림 (내일 다시)</button>
+        <button class="m-btn m-easy" onclick="answerWord(true)">알겠음 (잔디 반영)</button>
+      </div>
+    </div>
+
+    <a-scene embedded style="width: 100%; height: 100%;">
+      <a-entity position="0 1.6 0">
+        <a-camera look-controls wasd-controls>
+          <a-cursor color="#2e7d32" fuse="false" raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
+      </a-entity>
+      <a-plane position="0 0 0" rotation="-90 0 0" width="14" height="14" color="#f1f5f9"></a-plane>
+      <a-plane position="0 5 0" rotation="90 0 0" width="14" height="14" color="#e2e8f0"></a-plane>
+      <a-plane position="0 2.5 -7" width="14" height="5" color="#ffffff"></a-plane>
+      <a-plane position="0 2.5 7" rotation="0 180 0" width="14" height="5" color="#ffffff"></a-plane>
+      <a-plane position="-7 2.5 0" rotation="0 90 0" width="14" height="5" color="#ffffff"></a-plane>
+      <a-plane position="7 2.5 0" rotation="0 -90 0" width="14" height="5" color="#ffffff"></a-plane>
+      <a-entity id="word-holder"></a-entity>
+    </a-scene>
+  </div>
+
+  <script>
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    function getDB() {
+      const data = localStorage.getItem('voca_db');
+      return data ? JSON.parse(data) : [
+        { id: 1, word: "mitochondria", meaning: "미토콘드리아 (세포 호흡)", collocation: "mitochondrial membrane", example: "Mitochondria produce ATP.", lastShown: null, interval: 1 },
+        { id: 2, word: "permeability", meaning: "투과성", collocation: "selective permeability", example: "Cell membranes have permeability.", lastShown: null, interval: 1 },
+        { id: 3, word: "ubiquitous", meaning: "어디에나 존재하는", collocation: "ubiquitous presence", example: "Computers are ubiquitous.", lastShown: null, interval: 1 }
+      ];
+    }
+    function saveDB(db) { localStorage.setItem('voca_db', JSON.stringify(db)); }
+
+    function saveWord() {
+      const w = document.getElementById('w-word').value.trim();
+      const m = document.getElementById('w-meaning').value.trim();
+      if (!w || !m) return alert("단어와 뜻을 적어주세요!");
+
+      const db = getDB();
+      db.push({
+        id: Date.now(),
+        word: w, meaning: m,
+        collocation: document.getElementById('w-collocation').value.trim(),
+        example: document.getElementById('w-example').value.trim(),
+        lastShown: null,
+        interval: 1
+      });
+      saveDB(db);
+      alert(`'${w}' 저장 완료!`);
+      document.getElementById('w-word').value = '';
+      document.getElementById('w-meaning').value = '';
+      document.getElementById('w-collocation').value = '';
+      document.getElementById('w-example').value = '';
+    }
+
+    let activeItem = null;
+    let activeEntity = null;
+
+    function startRoom() {
+      const count = parseInt(document.getElementById('count-sel').value, 10);
+      const db = getDB();
+      const today = new Date();
+
+      const sorted = [...db].sort((a, b) => {
+        const aDue = !a.lastShown || (Math.floor((today - new Date(a.lastShown))/86400000) >= a.interval);
+        const bDue = !b.lastShown || (Math.floor((today - new Date(b.lastShown))/86400000) >= b.interval);
+        return (bDue ? 1 : 0) - (aDue ? 1 : 0);
+      });
+
+      const targets = sorted.slice(0, count);
+      if (targets.length === 0) return alert("단어를 먼저 등록해주세요!");
+
+      document.getElementById('room-view').style.display = 'block';
+      const holder = document.getElementById('word-holder');
+      holder.innerHTML = '';
+
+      const walls = [
+        { z: -6.9, rot: "0 0 0", axis: 'x' },
+        { z: 6.9, rot: "0 180 0", axis: 'x' },
+        { x: -6.9, rot: "0 90 0", axis: 'z' },
+        { x: 6.9, rot: "0 -90 0", axis: 'z' }
+      ];
+
+      targets.forEach((item, i) => {
+        const w = walls[i % 4];
+        const offset = ((i % 4) - 1.5) * 2.8;
+        const y = 1.3 + (Math.floor(i / 4) * 0.9);
+
+        const el = document.createElement('a-text');
+        el.setAttribute('value', item.word);
+        el.setAttribute('align', 'center');
+        el.setAttribute('color', '#0f172a');
+        el.setAttribute('width', 7);
+        el.setAttribute('rotation', w.rot);
+        el.setAttribute('position', `${w.axis === 'x' ? offset : w.x} ${y} ${w.axis === 'z' ? offset : w.z}`);
+        el.setAttribute('class', 'clickable');
+
+        el.addEventListener('click', () => {
+          activeItem = item;
+          activeEntity = el;
+          document.getElementById('m-word').innerText = item.word;
+          document.getElementById('m-mean').innerText = item.meaning;
+          document.getElementById('m-col').innerText = item.collocation || '-';
+          document.getElementById('m-ex').innerText = item.example || '-';
+          document.getElementById('modal').style.display = 'block';
+        });
+
+        holder.appendChild(el);
+      });
+    }
+
+    function answerWord(remembered) {
+      if (!activeItem) return;
+      const db = getDB();
+      const target = db.find(x => x.id === activeItem.id);
+
+      if (target) {
+        target.lastShown = todayStr;
+        if (remembered) {
+          target.interval = Math.min(target.interval * 2 + 1, 30);
+          activeEntity.setAttribute('color', '#2e7d32');
+          activeEntity.setAttribute('value', `✓ ${target.word}`);
+
+          // 플래너 잔디에 실시간 연동 점수 부여 (+2 pts)
+          const tracker = JSON.parse(localStorage.getItem('study_tracker') || '{}');
+          if (!tracker[todayStr]) tracker[todayStr] = { score: 0, logs: [] };
+          tracker[todayStr].score += 2;
+          tracker[todayStr].logs.push({
+            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+            text: `[단어 암기 완료] ${target.word}`,
+            pts: 2
+          });
+          localStorage.setItem('study_tracker', JSON.stringify(tracker));
+        } else {
+          target.interval = 1;
+          activeEntity.setAttribute('color', '#dc2626');
+        }
+        saveDB(db);
+      }
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function closeRoom() {
+      document.getElementById('room-view').style.display = 'none';
+      document.getElementById('modal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

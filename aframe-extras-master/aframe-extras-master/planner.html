@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Study Planner & Habit Grass</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #ffffff; --primary: #2e7d32;
+      --text: #1e293b; --border: #e2e8f0; --sub: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px 16px; }
+    .container { max-width: 860px; margin: 0 auto; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { font-size: 22px; color: var(--primary); }
+    .link-btn {
+      background: white; border: 1px solid var(--border); padding: 8px 16px;
+      border-radius: 8px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .link-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+    h2 { font-size: 16px; margin-bottom: 14px; }
+
+    /* 잔디 히트맵 */
+    .heatmap-wrap { overflow-x: auto; padding: 10px 0; }
+    .heatmap-board {
+      display: grid; grid-template-rows: repeat(7, 14px);
+      grid-auto-flow: column; grid-auto-columns: 14px; gap: 4px;
+    }
+    .cell { width: 14px; height: 14px; border-radius: 3px; background: #ebedf0; position: relative; }
+    .cell:hover::after {
+      content: attr(data-tip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: white; padding: 4px 8px; border-radius: 4px;
+      font-size: 11px; white-space: nowrap; z-index: 10; pointer-events: none;
+    }
+    .lvl-0 { background: #ebedf0; }
+    .lvl-1 { background: #9be9a8; }
+    .lvl-2 { background: #40c463; }
+    .lvl-3 { background: #30a14e; }
+    .lvl-4 { background: #216e39; }
+
+    /* 입력 영역 */
+    .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    input[type="text"] {
+      flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--primary); }
+    button.btn-add {
+      background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px;
+      font-weight: 600; cursor: pointer;
+    }
+
+    /* 로그 리스트 */
+    .log-item {
+      padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+    .badge-pts { background: #e8f5e9; color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌱 데일리 스터디 플래너</h1>
+      <a href="vocab_room.html" class="link-btn">🏛️ 3D 단어방 가기 →</a>
+    </header>
+
+    <!-- 잔디 캘린더 -->
+    <div class="card">
+      <h2>📈 학습 잔디 (최근 16주)</h2>
+      <div class="heatmap-wrap">
+        <div class="heatmap-board" id="board"></div>
+      </div>
+    </div>
+
+    <!-- 오늘 할 일 / 공부 입력 -->
+    <div class="card">
+      <h2>✍️ 오늘 공부한 것 기록하기</h2>
+      <p style="font-size: 13px; color: var(--sub); margin-bottom: 12px;">
+        예: <code>AP BIO 15페이지</code>, <code>수학 20문제 풀이</code>, <code>단어 30개</code> 등 숫자와 내용을 자유롭게 적어보세요.
+      </p>
+      <div class="input-group">
+        <input type="text" id="log-input" placeholder="오늘 달성한 내용 입력...">
+        <button class="btn-add" onclick="addLog()">기록</button>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <h3 style="font-size: 14px; margin-bottom: 8px; color: var(--sub);">오늘의 기록 내역</h3>
+        <div id="log-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    function getTracker() {
+      return JSON.parse(localStorage.getItem('study_tracker') || '{}');
+    }
+    function saveTracker(data) {
+      localStorage.setItem('study_tracker', JSON.stringify(data));
+      renderBoard();
+      renderLogs();
+    }
+
+    function extractPoints(str) {
+      const match = str.match(/(\d+)\s*(페이지|p|문제|개|장)?/i);
+      return match ? Math.max(1, parseInt(match[1], 10)) : 3;
+    }
+
+    function addLog() {
+      const input = document.getElementById('log-input');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const tracker = getTracker();
+      if (!tracker[todayStr]) tracker[todayStr] = { score: 0, logs: [] };
+
+      const pts = extractPoints(val);
+      tracker[todayStr].score += pts;
+      tracker[todayStr].logs.push({
+        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+        text: val,
+        pts: pts
+      });
+
+      saveTracker(tracker);
+      input.value = '';
+    }
+
+    function renderLogs() {
+      const list = document.getElementById('log-list');
+      list.innerHTML = '';
+      const data = getTracker()[todayStr];
+
+      if (!data || !data.logs || data.logs.length === 0) {
+        list.innerHTML = '<p style="font-size:13px; color:#94a3b8; padding:8px 0;">오늘 아직 등록된 기록이 없습니다.</p>';
+        return;
+      }
+
+      data.logs.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'log-item';
+        row.innerHTML = `<span><strong>${item.time}</strong> ${item.text}</span> <span class="badge badge-pts">+${item.pts} pts</span>`;
+        list.appendChild(row);
+      });
+    }
+
+    function renderBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      const tracker = getTracker();
+      const total = 16 * 7;
+      const today = new Date();
+
+      for (let i = total - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const k = d.toISOString().split('T')[0];
+        const day = tracker[k] || { score: 0, logs: [] };
+
+        const c = document.createElement('div');
+        c.className = 'cell';
+        let lvl = 0;
+        if (day.score >= 35) lvl = 4;
+        else if (day.score >= 20) lvl = 3;
+        else if (day.score >= 10) lvl = 2;
+        else if (day.score > 0) lvl = 1;
+
+        c.classList.add(`lvl-${lvl}`);
+        c.setAttribute('data-tip', `${k}: ${day.score} pts (${day.logs?.length || 0}건)`);
+        board.appendChild(c);
+      }
+    }
+
+    window.onload = () => { renderBoard(); renderLogs(); };
+  </script>
+</body>
+</html>
