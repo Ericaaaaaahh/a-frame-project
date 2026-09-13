@@ -13,7 +13,6 @@
       --text-sub: #7c7267;
       --accent-wood: #4a2810;
       
-      /* Clover Tone Palette */
       --clover-empty: #e5e0d8;
       --clover-lvl-1: #d2dbbe;
       --clover-lvl-2: #a7ad8a;
@@ -30,7 +29,6 @@
       display: flex; justify-content: center; align-items: center;
     }
 
-    /* 상위 연대기 컨테이너 */
     .chronicle-container {
       width: 92vw; max-width: 1040px;
       height: 82vh; max-height: 720px;
@@ -38,7 +36,6 @@
       position: relative;
     }
 
-    /* 좌측: 클로버 캘린더 보드 */
     .calendar-card {
       background: var(--card-parchment);
       border-radius: 24px;
@@ -48,15 +45,11 @@
       display: flex; flex-direction: column;
     }
 
-    /* 캘린더 헤더 (< 2026년 9월 >) */
     .cal-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 24px;
     }
-    .cal-title {
-      font-size: 24px; font-weight: 500; color: var(--text-main);
-      letter-spacing: 0.5px;
-    }
+    .cal-title { font-size: 24px; font-weight: 500; color: var(--text-main); letter-spacing: 0.5px; }
     .nav-arrows { display: flex; gap: 8px; }
     .nav-arrow-btn {
       background: rgba(0,0,0,0.04); border: 1px solid var(--border-soft);
@@ -66,7 +59,6 @@
     }
     .nav-arrow-btn:hover { background: #e8e2d8; transform: scale(1.08); }
 
-    /* 요일 표시 헤더 */
     .weekdays-row {
       display: grid; grid-template-columns: repeat(7, 1fr);
       text-align: center; font-size: 13px; font-weight: 600;
@@ -74,53 +66,36 @@
       font-family: -apple-system, sans-serif;
     }
 
-    /* 날짜 그리드 */
     .days-grid {
       display: grid; grid-template-columns: repeat(7, 1fr);
       grid-gap: 12px 10px;
       align-items: center; justify-items: center;
     }
 
-    /* 4번째 이미지 둥근 클로버(Squircle) 아이콘 */
     .day-slot {
       display: flex; flex-direction: column; align-items: center; gap: 4px;
       cursor: pointer; width: 100%;
     }
     .clover-chip {
       width: 38px; height: 38px;
-      border-radius: 13px; /* 둥근 클로버 쉐입 */
+      border-radius: 13px;
       background: var(--clover-empty);
       transition: all 0.2s ease;
       box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.06);
       position: relative;
     }
-    .day-slot:hover .clover-chip {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-    }
-    .day-slot.selected .clover-chip {
-      outline: 2px solid var(--accent-wood);
-      outline-offset: 2px;
-      transform: translateY(-2px);
-    }
+    .day-slot:hover .clover-chip { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.12); }
+    .day-slot.selected .clover-chip { outline: 2px solid var(--accent-wood); outline-offset: 2px; transform: translateY(-2px); }
 
-    .day-number {
-      font-size: 12px; color: var(--text-sub);
-      font-family: -apple-system, sans-serif;
-    }
-    .day-slot.today .day-number {
-      font-weight: bold; color: var(--text-main);
-      text-decoration: underline; text-underline-offset: 3px;
-    }
+    .day-number { font-size: 12px; color: var(--text-sub); font-family: -apple-system, sans-serif; }
+    .day-slot.today .day-number { font-weight: bold; color: var(--text-main); text-decoration: underline; text-underline-offset: 3px; }
 
-    /* 클로버 잔디 농도 */
     .lvl-0 { background: var(--clover-empty); }
     .lvl-1 { background: var(--clover-lvl-1); }
     .lvl-2 { background: var(--clover-lvl-2); }
     .lvl-3 { background: var(--clover-lvl-3); }
     .lvl-4 { background: var(--clover-lvl-4); }
 
-    /* 우측: 날짜별 상세 기록 저널 */
     .log-detail-card {
       background: rgba(252, 251, 249, 0.94);
       backdrop-filter: blur(8px);
@@ -131,17 +106,12 @@
       display: flex; flex-direction: column;
       overflow: hidden;
     }
-    .journal-header {
-      border-bottom: 1px solid var(--border-soft);
-      padding-bottom: 16px; margin-bottom: 16px;
-    }
+    .journal-header { border-bottom: 1px solid var(--border-soft); padding-bottom: 16px; margin-bottom: 16px; }
     .journal-date { font-size: 22px; color: var(--text-main); font-weight: 500; }
     .journal-meta { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-style: italic; }
 
-    /* 타임라인 로그 리스트 */
     .timeline-stream {
-      flex: 1; overflow-y: auto;
-      padding-right: 4px;
+      flex: 1; overflow-y: auto; padding-right: 4px;
       display: flex; flex-direction: column; gap: 10px;
     }
     .stream-entry {
@@ -164,16 +134,13 @@
       color: #9e9488; font-size: 14px; font-style: italic; text-align: center;
     }
 
-    /* 하단 독 네비게이션 */
+    /* 하단 독 */
     .bottom-dock {
       position: fixed; bottom: 20px;
-      background: rgba(35, 25, 20, 0.75);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 24px;
+      background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
       display: flex; gap: 8px; padding: 8px 14px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.35);
-      z-index: 100;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
     }
     .dock-btn {
       padding: 9px 16px; border-radius: 16px;
@@ -181,15 +148,12 @@
       display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
       transition: all 0.2s; font-family: -apple-system, sans-serif;
     }
-    .dock-btn:hover, .dock-btn.active {
-      background: rgba(255,255,255,0.18); color: #fff;
-    }
+    .dock-btn:hover, .dock-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
   </style>
 </head>
 <body>
 
   <div class="chronicle-container">
-    <!-- 1. 미니멀 둥근 클로버 캘린더 -->
     <div class="calendar-card">
       <div class="cal-header">
         <h2 class="cal-title" id="month-title">September 2026</h2>
@@ -206,7 +170,6 @@
       <div class="days-grid" id="days-grid"></div>
     </div>
 
-    <!-- 2. 날짜별 상세 기록 저널 -->
     <div class="log-detail-card">
       <div class="journal-header">
         <h3 class="journal-date" id="selected-date-text">Select a date</h3>
@@ -216,26 +179,24 @@
     </div>
   </div>
 
-  <!-- 하단 독 네비게이션 -->
+  <!-- 하단 독: index_study.html 연결 -->
   <div class="bottom-dock">
-    <a href="index.html" class="dock-btn">📌 Board</a>
+    <a href="index_study.html" class="dock-btn">📌 Board</a>
     <a href="grass.html" class="dock-btn">🌿 Archives</a>
     <a href="history.html" class="dock-btn active">🗓️ Chronicle</a>
     <a href="word_room.html" class="dock-btn">🏛️ Voca Room</a>
   </div>
 
   <script>
-    let currentDate = new Date(); // 기본은 오늘 날짜
+    let currentDate = new Date();
     let viewingYear = currentDate.getFullYear();
     let viewingMonth = currentDate.getMonth();
     let selectedDateKey = currentDate.toISOString().split('T')[0];
 
-    // 통합 기록 데이터 불러오기 (플래너 + 과목별 잔디 합산)
     function getAllLogs() {
       const tracker = JSON.parse(localStorage.getItem('study_tracker') || '{}');
       const grassStore = JSON.parse(localStorage.getItem('subject_grass_store') || '{}');
 
-      // 과목별 잔디 기록도 전체 캘린더에 누락 없이 머지
       Object.keys(grassStore).forEach(subj => {
         Object.keys(grassStore[subj]).forEach(date => {
           if (!tracker[date]) tracker[date] = { score: 0, logs: [] };
@@ -270,7 +231,6 @@
       const firstDayOfMonth = new Date(viewingYear, viewingMonth, 1);
       const lastDayOfMonth = new Date(viewingYear, viewingMonth + 1, 0);
 
-      // 월요일 시작 요일 인덱스 (0: 월요일 ~ 6: 일요일)
       let startingDay = firstDayOfMonth.getDay() - 1;
       if (startingDay === -1) startingDay = 6;
 
@@ -278,7 +238,6 @@
       const logs = getAllLogs();
       const todayKey = new Date().toISOString().split('T')[0];
 
-      // 이전 달 빈 칸 채우기
       for (let i = 0; i < startingDay; i++) {
         const emptySlot = document.createElement('div');
         emptySlot.className = 'day-slot';
@@ -286,7 +245,6 @@
         grid.appendChild(emptySlot);
       }
 
-      // 해당 월의 날짜 클로버 렌더링
       for (let day = 1; day <= totalDays; day++) {
         const monthPad = String(viewingMonth + 1).padStart(2, '0');
         const dayPad = String(day).padStart(2, '0');
@@ -298,7 +256,6 @@
         if (dateKey === todayKey) slot.classList.add('today');
         if (dateKey === selectedDateKey) slot.classList.add('selected');
 
-        // 잔디 클로버 색상 레벨 (0~4단계)
         let lvl = 0;
         if (dayData.score >= 30) lvl = 4;
         else if (dayData.score >= 18) lvl = 3;
@@ -322,7 +279,6 @@
       renderJournalDetail(selectedDateKey);
     }
 
-    // 선택된 날짜의 상세 기록을 우측 저널에 렌더링
     function renderJournalDetail(dateKey) {
       const logs = getAllLogs();
       const dayData = logs[dateKey] || { score: 0, logs: [] };
@@ -359,19 +315,13 @@
 
     function prevMonth() {
       viewingMonth--;
-      if (viewingMonth < 0) {
-        viewingMonth = 11;
-        viewingYear--;
-      }
+      if (viewingMonth < 0) { viewingMonth = 11; viewingYear--; }
       renderCalendar();
     }
 
     function nextMonth() {
       viewingMonth++;
-      if (viewingMonth > 11) {
-        viewingMonth = 0;
-        viewingYear++;
-      }
+      if (viewingMonth > 11) { viewingMonth = 0; viewingYear++; }
       renderCalendar();
     }
 

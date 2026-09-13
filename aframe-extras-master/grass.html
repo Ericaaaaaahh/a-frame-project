@@ -30,7 +30,6 @@
       display: flex; justify-content: center; align-items: center;
     }
 
-    /* 상위 컨테이너 */
     .archive-workspace {
       width: 90vw; max-width: 1000px;
       height: 80vh; max-height: 700px;
@@ -38,7 +37,6 @@
       position: relative;
     }
 
-    /* 겹쳐진 서류 폴더 인덱스 탭 */
     .folder-tabs-bar {
       display: flex; gap: 4px; padding-left: 16px;
       position: relative; bottom: -1px; z-index: 5;
@@ -73,7 +71,6 @@
       padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text-muted);
     }
 
-    /* 폴더 바인더 본체 */
     .folder-body {
       flex: 1;
       background: var(--folder-paper);
@@ -88,7 +85,6 @@
       overflow-y: auto;
     }
 
-    /* 헤더 & 통계 */
     .body-header {
       display: flex; justify-content: space-between; align-items: baseline;
       border-bottom: 1px solid var(--border-color);
@@ -97,7 +93,6 @@
     .subject-title { font-size: 26px; color: var(--text-dark); font-weight: 500; }
     .subject-stats { font-size: 13px; color: var(--text-muted); font-style: italic; }
 
-    /* 잔디 매트릭스 그리드 */
     .matrix-container {
       background: rgba(255,255,255,0.7);
       border: 1px solid #ebdcd0;
@@ -133,7 +128,6 @@
     .lvl-3 { background-color: var(--g-lvl-3); }
     .lvl-4 { background-color: var(--g-lvl-4); }
 
-    /* 입력 영역 */
     .input-bar { display: flex; gap: 10px; margin-bottom: 16px; }
     input[type="text"] {
       flex: 1; padding: 12px 16px;
@@ -149,7 +143,6 @@
     }
     .btn-log:hover { background: #353b29; }
 
-    /* 최근 기록 로그 */
     .log-tray { flex: 1; overflow-y: auto; margin-top: 10px; }
     .log-entry {
       display: flex; justify-content: space-between; align-items: center;
@@ -161,16 +154,13 @@
       padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;
     }
 
-    /* 하단 독 네비게이션 */
+    /* 하단 독 */
     .bottom-dock {
       position: fixed; bottom: 20px;
-      background: rgba(35, 25, 20, 0.75);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 24px;
+      background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
       display: flex; gap: 8px; padding: 8px 14px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.35);
-      z-index: 100;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
     }
     .dock-btn {
       padding: 9px 16px; border-radius: 16px;
@@ -178,18 +168,14 @@
       display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
       transition: all 0.2s; font-family: -apple-system, sans-serif;
     }
-    .dock-btn:hover, .dock-btn.active {
-      background: rgba(255,255,255,0.18); color: #fff;
-    }
+    .dock-btn:hover, .dock-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
   </style>
 </head>
 <body>
 
   <div class="archive-workspace">
-    <!-- 폴더 탭 리스트 -->
     <div class="folder-tabs-bar" id="tab-bar"></div>
 
-    <!-- 폴더 본체 (선택된 과목 잔디) -->
     <div class="folder-body">
       <div class="body-header">
         <div>
@@ -199,7 +185,6 @@
         <button onclick="removeCurrentSubject()" style="background:none; border:none; color:#a85a5a; font-size:12px; cursor:pointer; font-family:-apple-system, sans-serif;">Remove Subject</button>
       </div>
 
-      <!-- 잔디 매트릭스 -->
       <div class="matrix-container">
         <div class="matrix-grid" id="matrix-grid"></div>
         <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); margin-top:10px; font-family:-apple-system,sans-serif;">
@@ -213,20 +198,18 @@
         </div>
       </div>
 
-      <!-- 다국어 자동 감지 인풋 -->
       <div class="input-bar">
         <input type="text" id="entry-input" placeholder="Record achievement (e.g. AP BIO 15p, 생물 12페이지, 단어 30개)...">
         <button class="btn-log" onclick="handleLogSubmit()">Log Record</button>
       </div>
 
-      <!-- 오늘 기록 로그 -->
       <div class="log-tray" id="log-tray"></div>
     </div>
   </div>
 
-  <!-- 하단 독 네비게이션 -->
+  <!-- 하단 독: index_study.html 연결 -->
   <div class="bottom-dock">
-    <a href="index.html" class="dock-btn">📌 Board</a>
+    <a href="index_study.html" class="dock-btn">📌 Board</a>
     <a href="grass.html" class="dock-btn active">🌿 Archives</a>
     <a href="history.html" class="dock-btn">🗓️ Chronicle</a>
     <a href="word_room.html" class="dock-btn">🏛️ Voca Room</a>
@@ -234,28 +217,17 @@
 
   <script>
     const todayStr = new Date().toISOString().split('T')[0];
-
-    // 기본 과목 인덱스 목록
     const DEFAULT_SUBJECTS = ["AP Biology", "World History", "Literature", "Vocabulary"];
 
     function getSubjects() {
       return JSON.parse(localStorage.getItem('study_subjects') || JSON.stringify(DEFAULT_SUBJECTS));
     }
-    function saveSubjects(subs) {
-      localStorage.setItem('study_subjects', JSON.stringify(subs));
-    }
-
-    function getStore() {
-      return JSON.parse(localStorage.getItem('subject_grass_store') || '{}');
-    }
-    function saveStore(store) {
-      localStorage.setItem('subject_grass_store', JSON.stringify(store));
-      renderCurrentView();
-    }
+    function saveSubjects(subs) { localStorage.setItem('study_subjects', JSON.stringify(subs)); }
+    function getStore() { return JSON.parse(localStorage.getItem('subject_grass_store') || '{}'); }
+    function saveStore(store) { localStorage.setItem('subject_grass_store', JSON.stringify(store)); renderCurrentView(); }
 
     let currentSubject = getSubjects()[0] || "General";
 
-    // 탭 렌더링
     function renderTabs() {
       const bar = document.getElementById('tab-bar');
       bar.innerHTML = '';
@@ -273,7 +245,6 @@
         bar.appendChild(tab);
       });
 
-      // 새 과목 추가 버튼
       const addBtn = document.createElement('button');
       addBtn.className = 'btn-add-subject';
       addBtn.innerText = '+ Add Subject';
@@ -306,7 +277,6 @@
       renderCurrentView();
     }
 
-    // 한/영 혼용 다국어 텍스트 및 숫자 감지 파서
     function parseInputEntry(text) {
       const numMatch = text.match(/(\d+)\s*(p|page|pages|페이지|문제|단어|개|장)?/i);
       const amount = numMatch ? parseInt(numMatch[1], 10) : 5;
@@ -356,7 +326,7 @@
         amount: parsed.amount
       });
 
-      // 전체 히스토리 캘린더용 DB에도 동시 누적
+      // 통합 캘린더용 DB에도 동시 누적
       const totalTracker = JSON.parse(localStorage.getItem('study_tracker') || '{}');
       if (!totalTracker[todayStr]) totalTracker[todayStr] = { score: 0, logs: [] };
       totalTracker[todayStr].score += parsed.amount;
@@ -377,7 +347,6 @@
       }
     }
 
-    // 잔디판 및 로그 렌더링
     function renderCurrentView() {
       document.getElementById('display-subject').innerText = currentSubject;
       const store = getStore();
@@ -387,7 +356,6 @@
       Object.values(subjectData).forEach(d => totalScore += (d.score || 0));
       document.getElementById('display-stats').innerText = `Aggregated Volume: ${totalScore} units recorded`;
 
-      // 잔디 그리드 (최근 18주 = 126일)
       const grid = document.getElementById('matrix-grid');
       grid.innerHTML = '';
       const totalDays = 18 * 7;
@@ -413,7 +381,6 @@
         grid.appendChild(cube);
       }
 
-      // 오늘 로그
       const tray = document.getElementById('log-tray');
       tray.innerHTML = '';
       const todayEntries = subjectData[todayStr]?.logs || [];
@@ -434,10 +401,8 @@
     }
 
     window.onload = () => {
-      // 배경 설정 불러오기
       const savedBg = localStorage.getItem('bg_theme');
       if (savedBg) document.documentElement.style.setProperty('--bg-theme', `url('${savedBg}')`);
-
       renderTabs();
       renderCurrentView();
     };
