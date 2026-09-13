@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,91 +8,36 @@
   <style>
     :root {
       --bg-theme: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80');
-      --card-paper: #fcfbf9;
-      --border-soft: #e2dcd2;
-      --text-main: #2b1f18;
-      --text-sub: #7c7267;
-      --accent-olive: #4a523a;
-      --accent-wood: #5c3a21;
+      --card-paper: #fcfbf9; --accent-wood: #5c3a21;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Playfair Display", "Times New Roman", serif;
-      background-image: var(--bg-theme);
-      background-size: cover; background-position: center;
-      min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center;
-      padding-bottom: 90px;
-    }
-
-    .container {
-      width: 90vw; max-width: 860px;
-      margin-top: 36px;
-    }
-
-    .card {
-      background: var(--card-paper);
-      border-radius: 20px;
-      border: 1px solid var(--border-soft);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-      padding: 26px 30px;
-      margin-bottom: 20px;
-    }
-    h2 { font-size: 20px; color: var(--text-main); margin-bottom: 14px; font-weight: 500; }
-
+    body { font-family: -apple-system, "Playfair Display", serif; background-image: var(--bg-theme); background-size: cover; background-position: center; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 90px; }
+    
+    .container { width: 90vw; max-width: 860px; margin-top: 36px; }
+    .card { background: var(--card-paper); border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); padding: 26px 30px; margin-bottom: 20px; }
+    h2 { font-size: 20px; color: #2b1f18; margin-bottom: 14px; font-weight: 500; }
     .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
-    input, select {
-      width: 100%; padding: 11px 14px;
-      border: 1px solid var(--border-soft); border-radius: 8px;
-      background: white; font-size: 14px; outline: none;
-      font-family: -apple-system, sans-serif;
-    }
-    input:focus { border-color: var(--accent-olive); }
+    input { width: 100%; padding: 11px 14px; border: 1px solid #e2dcd2; border-radius: 8px; font-family: -apple-system, sans-serif; }
+    .btn-action { background: var(--accent-wood); color: white; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: -apple-system, sans-serif; }
 
-    .btn-action {
-      background: var(--accent-wood); color: white; border: none;
-      padding: 11px 22px; border-radius: 8px; font-weight: 600; cursor: pointer;
-      font-family: -apple-system, sans-serif; font-size: 13px;
-      transition: background 0.2s;
-    }
-    .btn-action:hover { background: #442713; }
-
-    /* 3D 뷰 레이아웃 */
     #room-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; }
-    #exit-btn {
-      position: absolute; top: 20px; right: 20px; z-index: 1000;
-      background: #8b3a3a; color: white; border: none; padding: 9px 18px;
-      border-radius: 8px; font-weight: bold; cursor: pointer; font-family: -apple-system, sans-serif;
-    }
-
-    /* 단어 상세 팝업 */
-    #modal {
-      display: none; position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -50%); width: 330px; background: white;
-      padding: 24px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 1001;
-    }
-    #m-word { font-size: 22px; color: var(--accent-wood); margin-bottom: 8px; }
-    #modal p { font-size: 13px; margin: 6px 0; line-height: 1.4; color: var(--text-main); font-family: -apple-system, sans-serif; }
+    #exit-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: #8b3a3a; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: -apple-system, sans-serif; }
+    
+    #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 330px; background: white; padding: 24px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 1001; }
+    #m-word { font-size: 22px; color: var(--accent-wood); margin-bottom: 8px; font-family: "Playfair Display", serif;}
+    #modal p { font-size: 13px; margin: 6px 0; font-family: -apple-system, sans-serif; }
     .m-btns { display: flex; gap: 8px; margin-top: 16px; }
-    .m-btn {
-      flex: 1; padding: 10px; border: none; border-radius: 6px;
-      font-weight: bold; cursor: pointer; font-family: -apple-system, sans-serif; font-size: 12px;
-    }
-    .m-hard { background: #fee2e2; color: #991b1b; }
-    .m-easy { background: #dcfce7; color: #166534; }
+    .m-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: -apple-system, sans-serif; font-size: 12px; }
 
-    /* 하단 독 네비게이션 */
+    /* 하단 독 완벽 고정 */
     .bottom-dock {
-      position: fixed; bottom: 20px;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
       border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
-      display: flex; gap: 8px; padding: 8px 14px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
+      display: flex; gap: 8px; padding: 8px 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
     }
     .dock-btn {
-      padding: 9px 16px; border-radius: 16px;
-      color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 9px 16px; border-radius: 16px; color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
       display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
       transition: all 0.2s; font-family: -apple-system, sans-serif;
     }
@@ -102,44 +47,20 @@
 <body>
 
   <div class="container" id="hub-view">
-    <!-- 단어 DB 등록 -->
     <div class="card">
-      <h2>➕ Lexicon Repository Registration</h2>
+      <h2>➕ Lexicon Repository</h2>
       <div class="input-row">
-        <input type="text" id="w-word" placeholder="Word (e.g. mitochondria)">
+        <input type="text" id="w-word" placeholder="Word (e.g. ubiquitous)">
         <input type="text" id="w-meaning" placeholder="Definition (뜻)">
-      </div>
-      <div class="input-row">
-        <input type="text" id="w-collocation" placeholder="Collocation (연어, e.g. selective permeability)">
-        <input type="text" id="w-example" placeholder="Contextual Example (예문)">
       </div>
       <button class="btn-action" onclick="saveWord()">Deposit to Archive</button>
     </div>
-
-    <!-- 3D 방 입장 설정 -->
-    <div class="card" style="text-align: center; padding: 36px 20px;">
-      <h2 style="font-size: 22px; margin-bottom: 8px;">🏛️ 3D Memory Palace Chamber</h2>
-      <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 18px; font-family: -apple-system, sans-serif;">
-        Spaced repetition will auto-select review-due and new words onto the chamber walls.
-      </p>
-
-      <div style="display:inline-flex; align-items:center; gap:10px; margin-bottom: 22px; font-family:-apple-system, sans-serif;">
-        <label style="font-size: 13px; font-weight: 600;">Display Capacity:</label>
-        <select id="count-sel" style="width: auto; padding: 7px 14px;">
-          <option value="8">8 words</option>
-          <option value="12">12 words</option>
-          <option value="16" selected>16 words (Standard)</option>
-          <option value="20">20 words</option>
-        </select>
-      </div>
-      <br>
-      <button class="btn-action" style="font-size: 15px; padding: 12px 28px;" onclick="startRoom()">
-        Enter 3D Chamber
-      </button>
+    <div class="card" style="text-align: center;">
+      <h2>🏛️ 3D Memory Palace Chamber</h2>
+      <button class="btn-action" style="margin-top:10px; background:#4a523a;" onclick="startRoom()">Enter Chamber</button>
     </div>
   </div>
 
-    <!-- 하단 독 네비게이션 -->
   <div class="bottom-dock">
     <a href="index_study.html" class="dock-btn">📌 Board</a>
     <a href="grass.html" class="dock-btn">🌿 Archives</a>
@@ -147,28 +68,20 @@
     <a href="word_room.html" class="dock-btn active">🏛️ Voca Room</a>
   </div>
 
-  <!-- 3D 뷰 -->
   <div id="room-view">
     <button id="exit-btn" onclick="closeRoom()">Leave Chamber</button>
     <div id="modal">
       <h3 id="m-word">Word</h3>
       <p><strong>Definition:</strong> <span id="m-mean"></span></p>
-      <p><strong>Collocation:</strong> <span id="m-col"></span></p>
-      <p><strong>Example:</strong> <span id="m-ex"></span></p>
       <div class="m-btns">
-        <button class="m-btn m-hard" onclick="answerWord(false)">Uncertain (Review Next Day)</button>
-        <button class="m-btn m-easy" onclick="answerWord(true)">Retained (Log to Grass)</button>
+        <button class="m-btn" style="background:#fee2e2; color:#991b1b;" onclick="closeModal()">Review Later</button>
+        <button class="m-btn" style="background:#dcfce7; color:#166534;" onclick="closeModal()">Retained</button>
       </div>
     </div>
 
     <a-scene embedded style="width: 100%; height: 100%;">
-      <a-entity position="0 1.6 0">
-        <a-camera look-controls wasd-controls>
-          <a-cursor color="#4a523a" fuse="false" raycaster="objects: .clickable"></a-cursor>
-        </a-camera>
-      </a-entity>
+      <a-camera position="0 1.6 0"><a-cursor color="#4a523a"></a-cursor></a-camera>
       <a-plane position="0 0 0" rotation="-90 0 0" width="14" height="14" color="#f2eee9"></a-plane>
-      <a-plane position="0 5 0" rotation="90 0 0" width="14" height="14" color="#e5ded6"></a-plane>
       <a-plane position="0 2.5 -7" width="14" height="5" color="#faf8f5"></a-plane>
       <a-plane position="0 2.5 7" rotation="0 180 0" width="14" height="5" color="#faf8f5"></a-plane>
       <a-plane position="-7 2.5 0" rotation="0 90 0" width="14" height="5" color="#faf8f5"></a-plane>
@@ -178,145 +91,43 @@
   </div>
 
   <script>
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    function getDB() {
-      const data = localStorage.getItem('voca_db');
-      return data ? JSON.parse(data) : [
-        { id: 1, word: "mitochondria", meaning: "미토콘드리아 (세포 호흡 및 에너지 생성)", collocation: "mitochondrial membrane", example: "Mitochondria produce cellular ATP.", lastShown: null, interval: 1 },
-        { id: 2, word: "permeability", meaning: "투과성", collocation: "selective permeability", example: "Membranes control selective permeability.", lastShown: null, interval: 1 },
-        { id: 3, word: "ubiquitous", meaning: "어디에나 존재하는", collocation: "ubiquitous presence", example: "Digital algorithms are ubiquitous.", lastShown: null, interval: 1 }
-      ];
-    }
-    function saveDB(db) { localStorage.setItem('voca_db', JSON.stringify(db)); }
-
     function saveWord() {
       const w = document.getElementById('w-word').value.trim();
       const m = document.getElementById('w-meaning').value.trim();
-      if (!w || !m) return alert("Please specify word and definition.");
-
-      const db = getDB();
-      db.push({
-        id: Date.now(),
-        word: w, meaning: m,
-        collocation: document.getElementById('w-collocation').value.trim(),
-        example: document.getElementById('w-example').value.trim(),
-        lastShown: null, interval: 1
-      });
-      saveDB(db);
-      alert(`'${w}' archived successfully.`);
-      document.getElementById('w-word').value = '';
-      document.getElementById('w-meaning').value = '';
-      document.getElementById('w-collocation').value = '';
-      document.getElementById('w-example').value = '';
+      if (!w || !m) return;
+      const db = JSON.parse(localStorage.getItem('voca_db') || '[]');
+      db.push({ word: w, meaning: m });
+      localStorage.setItem('voca_db', JSON.stringify(db));
+      document.getElementById('w-word').value = ''; document.getElementById('w-meaning').value = '';
     }
 
-    let activeItem = null, activeEntity = null;
-
     function startRoom() {
-      const count = parseInt(document.getElementById('count-sel').value, 10);
-      const db = getDB();
-      const today = new Date();
-
-      const sorted = [...db].sort((a, b) => {
-        const aDue = !a.lastShown || (Math.floor((today - new Date(a.lastShown))/86400000) >= a.interval);
-        const bDue = !b.lastShown || (Math.floor((today - new Date(b.lastShown))/86400000) >= b.interval);
-        return (bDue ? 1 : 0) - (aDue ? 1 : 0);
-      });
-
-      const targets = sorted.slice(0, count);
-      if (targets.length === 0) return alert("Please register words first.");
-
+      const db = JSON.parse(localStorage.getItem('voca_db') || '[{"word":"mitochondria","meaning":"미토콘드리아"}]');
       document.getElementById('room-view').style.display = 'block';
-      const holder = document.getElementById('word-holder');
-      holder.innerHTML = '';
+      const holder = document.getElementById('word-holder'); holder.innerHTML = '';
 
-      const walls = [
-        { z: -6.9, rot: "0 0 0", axis: 'x' },
-        { z: 6.9, rot: "0 180 0", axis: 'x' },
-        { x: -6.9, rot: "0 90 0", axis: 'z' },
-        { x: 6.9, rot: "0 -90 0", axis: 'z' }
-      ];
-
-      targets.forEach((item, i) => {
+      const walls = [{ z: -6.9, rot: "0 0 0", axis: 'x' }, { z: 6.9, rot: "0 180 0", axis: 'x' }, { x: -6.9, rot: "0 90 0", axis: 'z' }, { x: 6.9, rot: "0 -90 0", axis: 'z' }];
+      
+      db.slice(0, 16).forEach((item, i) => {
         const w = walls[i % 4];
         const offset = ((i % 4) - 1.5) * 2.8;
-        const y = 1.3 + (Math.floor(i / 4) * 0.9);
-
         const el = document.createElement('a-text');
-        el.setAttribute('value', item.word);
-        el.setAttribute('align', 'center');
-        el.setAttribute('color', '#2b1f18');
-        el.setAttribute('width', 7);
-        el.setAttribute('rotation', w.rot);
-        el.setAttribute('position', `${w.axis === 'x' ? offset : w.x} ${y} ${w.axis === 'z' ? offset : w.z}`);
+        el.setAttribute('value', item.word); el.setAttribute('align', 'center'); el.setAttribute('color', '#2b1f18');
+        el.setAttribute('width', 7); el.setAttribute('rotation', w.rot);
+        el.setAttribute('position', `${w.axis === 'x' ? offset : w.x} 2.5 ${w.axis === 'z' ? offset : w.z}`);
         el.setAttribute('class', 'clickable');
-
         el.addEventListener('click', () => {
-          activeItem = item;
-          activeEntity = el;
           document.getElementById('m-word').innerText = item.word;
           document.getElementById('m-mean').innerText = item.meaning;
-          document.getElementById('m-col').innerText = item.collocation || '-';
-          document.getElementById('m-ex').innerText = item.example || '-';
           document.getElementById('modal').style.display = 'block';
         });
-
         holder.appendChild(el);
       });
     }
 
-    function answerWord(remembered) {
-      if (!activeItem) return;
-      const db = getDB();
-      const target = db.find(x => x.id === activeItem.id);
-
-      if (target) {
-        target.lastShown = todayStr;
-        if (remembered) {
-          target.interval = Math.min(target.interval * 2 + 1, 30);
-          activeEntity.setAttribute('color', '#4a523a');
-          activeEntity.setAttribute('value', `✓ ${target.word}`);
-
-          // 통합 잔디 & 과목별 Vocabulary 잔디 동시 누적 (+2 pts)
-          const store = JSON.parse(localStorage.getItem('subject_grass_store') || '{}');
-          if (!store['Vocabulary']) store['Vocabulary'] = {};
-          if (!store['Vocabulary'][todayStr]) store['Vocabulary'][todayStr] = { score: 0, logs: [] };
-          store['Vocabulary'][todayStr].score += 2;
-          store['Vocabulary'][todayStr].logs.push({
-            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            text: `Retained: ${target.word}`,
-            amount: 2
-          });
-          localStorage.setItem('subject_grass_store', JSON.stringify(store));
-
-          const tracker = JSON.parse(localStorage.getItem('study_tracker') || '{}');
-          if (!tracker[todayStr]) tracker[todayStr] = { score: 0, logs: [] };
-          tracker[todayStr].score += 2;
-          tracker[todayStr].logs.push({
-            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            text: `[Vocabulary] Retained: ${target.word}`,
-            pts: 2
-          });
-          localStorage.setItem('study_tracker', JSON.stringify(tracker));
-        } else {
-          target.interval = 1;
-          activeEntity.setAttribute('color', '#991b1b');
-        }
-        saveDB(db);
-      }
-      document.getElementById('modal').style.display = 'none';
-    }
-
-    function closeRoom() {
-      document.getElementById('room-view').style.display = 'none';
-      document.getElementById('modal').style.display = 'none';
-    }
-
-    window.onload = () => {
-      const savedBg = localStorage.getItem('bg_theme');
-      if (savedBg) document.documentElement.style.setProperty('--bg-theme', `url('${savedBg}')`);
-    };
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    function closeRoom() { document.getElementById('room-view').style.display = 'none'; closeModal(); }
+    window.onload = () => { const savedBg = localStorage.getItem('bg_theme'); if (savedBg) document.documentElement.style.setProperty('--bg-theme', `url('${savedBg}')`); };
   </script>
 </body>
 </html>

@@ -1,150 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study Chronicle & Minimal Calendar</title>
+  <title>Study Chronicle</title>
   <style>
     :root {
       --bg-theme: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80');
       --card-parchment: #fcfbf9;
-      --border-soft: #e2dcd2;
-      --text-main: #2b1f18;
-      --text-sub: #7c7267;
-      --accent-wood: #4a2810;
-      
       --clover-empty: #e5e0d8;
-      --clover-lvl-1: #d2dbbe;
-      --clover-lvl-2: #a7ad8a;
-      --clover-lvl-3: #6e7a5b;
-      --clover-lvl-4: #4a523a;
+      --clover-lvl-1: #d2dbbe; --clover-lvl-2: #a7ad8a; --clover-lvl-3: #6e7a5b; --clover-lvl-4: #4a523a;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 100vw; height: 100vh; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Playfair Display", "Times New Roman", serif;
-      background-image: var(--bg-theme);
-      background-size: cover; background-position: center;
-      display: flex; justify-content: center; align-items: center;
-    }
+    body { width: 100vw; height: 100vh; overflow: hidden; font-family: -apple-system, sans-serif; background-image: var(--bg-theme); background-size: cover; background-position: center; display: flex; justify-content: center; align-items: center; }
 
-    .chronicle-container {
-      width: 92vw; max-width: 1040px;
-      height: 82vh; max-height: 720px;
-      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px;
-      position: relative;
-    }
+    .chronicle-container { width: 92vw; max-width: 1040px; height: 82vh; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
+    .calendar-card, .log-detail-card { background: var(--card-parchment); border-radius: 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.3); padding: 32px; display: flex; flex-direction: column; }
+    .cal-title, .journal-date { font-size: 24px; font-family: "Playfair Display", serif; color: #2b1f18; margin-bottom: 24px; }
+    
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 12px 10px; align-items: center; justify-items: center; }
+    .day-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; width: 100%; }
+    .clover-chip { width: 38px; height: 38px; border-radius: 13px; background: var(--clover-empty); transition: all 0.2s ease; box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.06); }
+    .day-slot:hover .clover-chip { transform: translateY(-3px) scale(1.05); }
+    
+    .lvl-1 { background: var(--clover-lvl-1); } .lvl-2 { background: var(--clover-lvl-2); } .lvl-3 { background: var(--clover-lvl-3); } .lvl-4 { background: var(--clover-lvl-4); }
+    .day-number { font-size: 12px; color: #7c7267; }
+    
+    .timeline-stream { flex: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; }
+    .stream-entry { background: white; border: 1px solid #e2dcd2; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; }
 
-    .calendar-card {
-      background: var(--card-parchment);
-      border-radius: 24px;
-      border: 1px solid var(--border-soft);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.3);
-      padding: 32px;
-      display: flex; flex-direction: column;
-    }
-
-    .cal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 24px;
-    }
-    .cal-title { font-size: 24px; font-weight: 500; color: var(--text-main); letter-spacing: 0.5px; }
-    .nav-arrows { display: flex; gap: 8px; }
-    .nav-arrow-btn {
-      background: rgba(0,0,0,0.04); border: 1px solid var(--border-soft);
-      width: 34px; height: 34px; border-radius: 50%;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 14px; color: var(--text-main); transition: all 0.2s;
-    }
-    .nav-arrow-btn:hover { background: #e8e2d8; transform: scale(1.08); }
-
-    .weekdays-row {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      text-align: center; font-size: 13px; font-weight: 600;
-      color: var(--text-sub); margin-bottom: 12px;
-      font-family: -apple-system, sans-serif;
-    }
-
-    .days-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr);
-      grid-gap: 12px 10px;
-      align-items: center; justify-items: center;
-    }
-
-    .day-slot {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      cursor: pointer; width: 100%;
-    }
-    .clover-chip {
-      width: 38px; height: 38px;
-      border-radius: 13px;
-      background: var(--clover-empty);
-      transition: all 0.2s ease;
-      box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.06);
-      position: relative;
-    }
-    .day-slot:hover .clover-chip { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.12); }
-    .day-slot.selected .clover-chip { outline: 2px solid var(--accent-wood); outline-offset: 2px; transform: translateY(-2px); }
-
-    .day-number { font-size: 12px; color: var(--text-sub); font-family: -apple-system, sans-serif; }
-    .day-slot.today .day-number { font-weight: bold; color: var(--text-main); text-decoration: underline; text-underline-offset: 3px; }
-
-    .lvl-0 { background: var(--clover-empty); }
-    .lvl-1 { background: var(--clover-lvl-1); }
-    .lvl-2 { background: var(--clover-lvl-2); }
-    .lvl-3 { background: var(--clover-lvl-3); }
-    .lvl-4 { background: var(--clover-lvl-4); }
-
-    .log-detail-card {
-      background: rgba(252, 251, 249, 0.94);
-      backdrop-filter: blur(8px);
-      border-radius: 24px;
-      border: 1px solid var(--border-soft);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.3);
-      padding: 30px;
-      display: flex; flex-direction: column;
-      overflow: hidden;
-    }
-    .journal-header { border-bottom: 1px solid var(--border-soft); padding-bottom: 16px; margin-bottom: 16px; }
-    .journal-date { font-size: 22px; color: var(--text-main); font-weight: 500; }
-    .journal-meta { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-style: italic; }
-
-    .timeline-stream {
-      flex: 1; overflow-y: auto; padding-right: 4px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .stream-entry {
-      background: white; border: 1px solid var(--border-soft);
-      border-radius: 12px; padding: 12px 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-      display: flex; justify-content: space-between; align-items: center;
-      font-family: -apple-system, sans-serif; font-size: 13.5px;
-    }
-    .entry-text { color: var(--text-main); line-height: 1.4; }
-    .entry-pts {
-      background: #efebe4; color: var(--text-main);
-      padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 11px;
-      white-space: nowrap; margin-left: 10px;
-    }
-
-    .empty-state {
-      height: 100%; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      color: #9e9488; font-size: 14px; font-style: italic; text-align: center;
-    }
-
-    /* 하단 독 */
+    /* 하단 독 완벽 고정 */
     .bottom-dock {
-      position: fixed; bottom: 20px;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
       border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
-      display: flex; gap: 8px; padding: 8px 14px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
+      display: flex; gap: 8px; padding: 8px 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
     }
     .dock-btn {
-      padding: 9px 16px; border-radius: 16px;
-      color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 9px 16px; border-radius: 16px; color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
       display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
       transition: all 0.2s; font-family: -apple-system, sans-serif;
     }
@@ -155,31 +48,15 @@
 
   <div class="chronicle-container">
     <div class="calendar-card">
-      <div class="cal-header">
-        <h2 class="cal-title" id="month-title">September 2026</h2>
-        <div class="nav-arrows">
-          <button class="nav-arrow-btn" onclick="prevMonth()">⟨</button>
-          <button class="nav-arrow-btn" onclick="nextMonth()">⟩</button>
-        </div>
-      </div>
-
-      <div class="weekdays-row">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-      </div>
-
+      <h2 class="cal-title">September 2026</h2>
       <div class="days-grid" id="days-grid"></div>
     </div>
-
     <div class="log-detail-card">
-      <div class="journal-header">
-        <h3 class="journal-date" id="selected-date-text">Select a date</h3>
-        <p class="journal-meta" id="selected-meta-text">Cumulative volume and logged subjects</p>
-      </div>
+      <h3 class="journal-date" id="selected-date-text">Select a date</h3>
       <div class="timeline-stream" id="timeline-stream"></div>
     </div>
   </div>
 
-  <!-- 하단 독: index_study.html 연결 -->
   <div class="bottom-dock">
     <a href="index_study.html" class="dock-btn">📌 Board</a>
     <a href="grass.html" class="dock-btn">🌿 Archives</a>
@@ -189,140 +66,40 @@
 
   <script>
     let currentDate = new Date();
-    let viewingYear = currentDate.getFullYear();
-    let viewingMonth = currentDate.getMonth();
     let selectedDateKey = currentDate.toISOString().split('T')[0];
 
-    function getAllLogs() {
-      const tracker = JSON.parse(localStorage.getItem('study_tracker') || '{}');
-      const grassStore = JSON.parse(localStorage.getItem('subject_grass_store') || '{}');
-
-      Object.keys(grassStore).forEach(subj => {
-        Object.keys(grassStore[subj]).forEach(date => {
-          if (!tracker[date]) tracker[date] = { score: 0, logs: [] };
-          const dayEntries = grassStore[subj][date].logs || [];
-          dayEntries.forEach(entry => {
-            const exists = tracker[date].logs.some(l => l.text === entry.text);
-            if (!exists) {
-              tracker[date].score += (entry.amount || 0);
-              tracker[date].logs.push({
-                time: entry.time || '12:00',
-                text: `[${subj}] ${entry.text}`,
-                pts: entry.amount || 0
-              });
-            }
-          });
-        });
-      });
-
-      return tracker;
-    }
-
     function renderCalendar() {
-      const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-      ];
-      document.getElementById('month-title').innerText = `${monthNames[viewingMonth]} ${viewingYear}`;
-
-      const grid = document.getElementById('days-grid');
-      grid.innerHTML = '';
-
-      const firstDayOfMonth = new Date(viewingYear, viewingMonth, 1);
-      const lastDayOfMonth = new Date(viewingYear, viewingMonth + 1, 0);
-
-      let startingDay = firstDayOfMonth.getDay() - 1;
-      if (startingDay === -1) startingDay = 6;
-
-      const totalDays = lastDayOfMonth.getDate();
-      const logs = getAllLogs();
-      const todayKey = new Date().toISOString().split('T')[0];
-
-      for (let i = 0; i < startingDay; i++) {
-        const emptySlot = document.createElement('div');
-        emptySlot.className = 'day-slot';
-        emptySlot.style.visibility = 'hidden';
-        grid.appendChild(emptySlot);
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const monthPad = String(viewingMonth + 1).padStart(2, '0');
-        const dayPad = String(day).padStart(2, '0');
-        const dateKey = `${viewingYear}-${monthPad}-${dayPad}`;
+      const grid = document.getElementById('days-grid'); grid.innerHTML = '';
+      const logs = JSON.parse(localStorage.getItem('study_tracker') || '{}');
+      
+      for (let day = 1; day <= 30; day++) {
+        const dateKey = `2026-09-${String(day).padStart(2, '0')}`;
         const dayData = logs[dateKey] || { score: 0, logs: [] };
-
-        const slot = document.createElement('div');
-        slot.className = 'day-slot';
-        if (dateKey === todayKey) slot.classList.add('today');
-        if (dateKey === selectedDateKey) slot.classList.add('selected');
-
+        const slot = document.createElement('div'); slot.className = 'day-slot';
+        
         let lvl = 0;
-        if (dayData.score >= 30) lvl = 4;
-        else if (dayData.score >= 18) lvl = 3;
-        else if (dayData.score >= 8) lvl = 2;
-        else if (dayData.score > 0) lvl = 1;
-
-        slot.innerHTML = `
-          <div class="clover-chip lvl-${lvl}"></div>
-          <span class="day-number">${day}</span>
-        `;
-
-        slot.onclick = () => {
-          selectedDateKey = dateKey;
-          renderCalendar();
-          renderJournalDetail(dateKey);
-        };
-
+        if (dayData.score >= 20) lvl = 4; else if (dayData.score >= 10) lvl = 3; else if (dayData.score >= 5) lvl = 2; else if (dayData.score > 0) lvl = 1;
+        
+        slot.innerHTML = `<div class="clover-chip ${lvl > 0 ? 'lvl-'+lvl : ''}"></div><span class="day-number">${day}</span>`;
+        slot.onclick = () => renderJournalDetail(dateKey);
         grid.appendChild(slot);
       }
-
       renderJournalDetail(selectedDateKey);
     }
 
     function renderJournalDetail(dateKey) {
-      const logs = getAllLogs();
-      const dayData = logs[dateKey] || { score: 0, logs: [] };
-
       document.getElementById('selected-date-text').innerText = dateKey;
-      document.getElementById('selected-meta-text').innerText = 
-        `Total Volume: ${dayData.score} pts / units | ${dayData.logs.length} logged records`;
+      const logs = JSON.parse(localStorage.getItem('study_tracker') || '{}');
+      const dayData = logs[dateKey] || { logs: [] };
+      const stream = document.getElementById('timeline-stream'); stream.innerHTML = '';
 
-      const stream = document.getElementById('timeline-stream');
-      stream.innerHTML = '';
-
-      if (!dayData.logs || dayData.logs.length === 0) {
-        stream.innerHTML = `
-          <div class="empty-state">
-            <p>No archives or achievements logged on this date.</p>
-          </div>
-        `;
-        return;
+      if (dayData.logs.length === 0) {
+        stream.innerHTML = '<p style="color:#9e9488; text-align:center; margin-top:20px;">No archives logged on this date.</p>';
+      } else {
+        dayData.logs.forEach(item => {
+          stream.innerHTML += `<div class="stream-entry"><div>${item}</div><span style="background:#efebe4; padding:3px 8px; border-radius:6px; font-weight:600; font-size:11px;">+5 pts</span></div>`;
+        });
       }
-
-      dayData.logs.forEach(item => {
-        const entry = document.createElement('div');
-        entry.className = 'stream-entry';
-        entry.innerHTML = `
-          <div class="entry-text">
-            <small style="color:var(--text-sub); display:block; margin-bottom:2px;">${item.time || 'Logged'}</small>
-            ${item.text}
-          </div>
-          <span class="entry-pts">+${item.pts || item.amount || 2}</span>
-        `;
-        stream.appendChild(entry);
-      });
-    }
-
-    function prevMonth() {
-      viewingMonth--;
-      if (viewingMonth < 0) { viewingMonth = 11; viewingYear--; }
-      renderCalendar();
-    }
-
-    function nextMonth() {
-      viewingMonth++;
-      if (viewingMonth > 11) { viewingMonth = 0; viewingYear++; }
-      renderCalendar();
     }
 
     window.onload = () => {
