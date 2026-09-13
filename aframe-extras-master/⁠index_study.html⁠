@@ -3,197 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aesthetic Study Board</title>
+  <title>Chronicle</title>
   <style>
-    :root {
-      --bg-theme: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80');
-      --wood-base: #5c3a21;
-    }
-
+    :root { --bg-theme: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80'); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 100vw; height: 100vh; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Playfair Display", "Times New Roman", serif;
-      background-image: var(--bg-theme); background-size: cover; background-position: center;
-      display: flex; justify-content: center; align-items: center; transition: background-image 0.4s ease;
-    }
+    body { font-family: -apple-system, sans-serif; background-image: var(--bg-theme); background-size: cover; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    
+    .container { width: 90vw; max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: #fcfbf9; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    
+    h2 { color: #2b1f18; margin-bottom: 20px; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center; }
+    .day-slot { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+    .chip { width: 35px; height: 35px; border-radius: 12px; background: #e5e0d8; transition: 0.2s; }
+    .day-slot:hover .chip { transform: scale(1.1); }
+    .chip.lvl-1 { background: #d2dbbe; } .chip.lvl-2 { background: #a7ad8a; } .chip.lvl-3 { background: #6e7a5b; } .chip.lvl-4 { background: #4a523a; }
+    
+    .log-area { font-size: 14px; margin-top: 20px; }
+    .log-line { background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 8px; display: flex; justify-content: space-between; }
 
-    .wood-board {
-      position: relative; width: 86vw; max-width: 950px; height: 76vh; max-height: 650px;
-      background: linear-gradient(115deg, #4a2810 0%, #6e3d1b 25%, #46250e 45%, #7a4621 70%, #3e1f0b 100%);
-      border-radius: 28px; padding: 30px; overflow: hidden;
-      box-shadow: inset 0 0 0 12px rgba(0,0,0,0.25), inset 0 0 25px rgba(0,0,0,0.6), 0 25px 50px rgba(0,0,0,0.45);
-    }
-    .wood-board::after {
-      content: ''; position: absolute; top: 15px; bottom: 15px; left: 15px; right: 15px;
-      border: 2px solid rgba(255,255,255,0.08); border-bottom-color: rgba(0,0,0,0.4); border-right-color: rgba(0,0,0,0.4);
-      border-radius: 18px; pointer-events: none;
-    }
-
-    .board-header { position: relative; z-index: 5; display: flex; justify-content: space-between; align-items: center; }
-    .board-title { color: rgba(245, 235, 224, 0.75); font-size: 15px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
-    .btn-add-sticky {
-      background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); width: 36px; height: 36px;
-      border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(4px); transition: all 0.2s;
-    }
-    .btn-add-sticky:hover { background: rgba(255,255,255,0.35); transform: scale(1.05); }
-
-    .sticky-container {
-      position: relative; width: 100%; height: calc(100% - 30px); margin-top: 10px; overflow-y: auto;
-      display: flex; flex-wrap: wrap; gap: 18px; align-content: flex-start; padding: 10px 4px 60px 4px;
-    }
-    .sticky-note {
-      position: relative; border-radius: 2px; padding: 14px 16px; color: #2b1f18;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.15), 0 10px 20px rgba(0,0,0,0.22);
-      transform: rotate(var(--rot, 0deg)); transition: transform 0.2s, box-shadow 0.2s;
-      display: flex; flex-direction: column; justify-content: space-between;
-    }
-    .sticky-note:hover { transform: scale(1.03) rotate(0deg); box-shadow: 0 14px 28px rgba(0,0,0,0.3); z-index: 10; cursor: pointer; }
-
-    .size-sm { width: 130px; min-height: 120px; font-size: 13px; }
-    .size-md { width: 170px; min-height: 150px; font-size: 14px; }
-    .size-lg { width: 220px; min-height: 190px; font-size: 15px; }
-
-    .sticky-text { white-space: pre-wrap; word-break: break-word; line-height: 1.45; font-family: -apple-system, sans-serif; }
-    .sticky-del { align-self: flex-end; background: none; border: none; font-size: 18px; color: rgba(0,0,0,0.35); cursor: pointer; padding: 2px; }
-    .sticky-del:hover { color: #b91c1c; }
-
-    /* 하단 독 완벽 고정 */
-    .bottom-dock {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
-      display: flex; gap: 8px; padding: 8px 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
-    }
-    .dock-btn {
-      padding: 9px 16px; border-radius: 16px; color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
-      display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
-      transition: all 0.2s; font-family: -apple-system, sans-serif;
-    }
-    .dock-btn:hover, .dock-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
-
-    .modal {
-      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 90%; max-width: 380px; background: #fff; border-radius: 18px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.35); padding: 22px; z-index: 200;
-    }
-    .modal h3 { font-size: 17px; margin-bottom: 14px; color: #2b1f18; font-family: -apple-system, sans-serif;}
-    .color-picker { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
-    .color-chip { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-    .color-chip.selected { border-color: #3e2723; transform: scale(1.15); }
-    textarea, select { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 14px; outline: none; margin-bottom: 12px; font-family: -apple-system, sans-serif; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
-    .btn-submit { background: #5c3a21; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .btn-cancel { background: #f1f5f9; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; }
+    /* 완벽 고정된 하단 독 */
+    .bottom-dock { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(35, 25, 20, 0.85); backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 20px; display: flex; gap: 10px; z-index: 999; border: 1px solid rgba(255,255,255,0.1); }
+    .dock-btn { text-decoration: none; color: #aaa; font-family: -apple-system, sans-serif; font-size: 14px; padding: 8px 16px; border-radius: 12px; transition: 0.2s; background: transparent; border: none; cursor: pointer; }
+    .dock-btn.active, .dock-btn:hover { background: rgba(255,255,255,0.2); color: white; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <div class="wood-board">
-    <div class="board-header">
-      <span class="board-title">Focus & Goal Board</span>
-      <button class="btn-add-sticky" onclick="openStickyModal()">+</button>
+  <div class="container">
+    <div class="card">
+      <h2>September 2026</h2>
+      <div class="grid" id="cal"></div>
     </div>
-    <div class="sticky-container" id="sticky-container"></div>
+    <div class="card">
+      <h2 id="sel-date">Select Date</h2>
+      <div class="log-area" id="logs">Select a day to see study logs.</div>
+    </div>
   </div>
 
   <div class="bottom-dock">
-    <a href="index_study.html" class="dock-btn active">📌 Board</a>
+    <a href="index_study.html" class="dock-btn">📌 Board</a>
     <a href="grass.html" class="dock-btn">🌿 Archives</a>
-    <a href="history.html" class="dock-btn">🗓️ Chronicle</a>
+    <a href="history.html" class="dock-btn active">🗓️ Chronicle</a>
     <a href="word_room.html" class="dock-btn">🏛️ Voca Room</a>
-    <button class="dock-btn" onclick="openSettingModal()">⚙️ Theme</button>
-  </div>
-
-  <div id="sticky-modal" class="modal">
-    <h3>New Sticky Note</h3>
-    <textarea id="sticky-text-in" rows="4" placeholder="Record goal or note..."></textarea>
-    <label style="font-size: 13px; color: #64748b; font-family: -apple-system, sans-serif;">Palette:</label>
-    <div class="color-picker" id="color-chips"></div>
-    <label style="font-size: 13px; color: #64748b; font-family: -apple-system, sans-serif;">Size:</label>
-    <select id="sticky-size-in">
-      <option value="size-sm">Small</option>
-      <option value="size-md" selected>Medium</option>
-      <option value="size-lg">Large</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('sticky-modal')">Cancel</button>
-      <button class="btn-submit" onclick="addStickyNote()">Pin to Board</button>
-    </div>
-  </div>
-
-  <div id="setting-modal" class="modal">
-    <h3>Background Theme</h3>
-    <select id="bg-select" onchange="changeBackground(this.value)">
-      <option value="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80">Warm Marble</option>
-      <option value="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=80">Linen & Cozy</option>
-      <option value="https://images.unsplash.com/photo-1507842229451-79738c6d83ed?auto=format&fit=crop&w=1600&q=80">Dark Academia Study</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn-submit" onclick="closeModal('setting-modal')">Confirm</button>
-    </div>
   </div>
 
   <script>
-    const PALETTE = [
-      { name: "Dusty Sand", hex: "#DCCDBA" }, { name: "Mocha Cream", hex: "#E6D9CB" },
-      { name: "Olive Tint", hex: "#DCE0C5" }, { name: "Dusty Rose", hex: "#F2E7E3" },
-      { name: "Muted Ochre", hex: "#E5C88F" }, { name: "Night Lavender", hex: "#AEB2C7" }
-    ];
-    let selectedColor = PALETTE[0].hex;
-
-    function initColorChips() {
-      const container = document.getElementById('color-chips'); container.innerHTML = '';
-      PALETTE.forEach((c, i) => {
-        const chip = document.createElement('div');
-        chip.className = `color-chip ${i === 0 ? 'selected' : ''}`;
-        chip.style.backgroundColor = c.hex;
-        chip.onclick = () => {
-          document.querySelectorAll('.color-chip').forEach(el => el.classList.remove('selected'));
-          chip.classList.add('selected'); selectedColor = c.hex;
-        };
-        container.appendChild(chip);
-      });
+    function renderCal() {
+      const data = JSON.parse(localStorage.getItem('history_db') || '{}');
+      const cal = document.getElementById('cal');
+      for(let i=1; i<=30; i++) {
+        const k = `2026-09-${String(i).padStart(2,'0')}`;
+        const day = data[k] || { score: 0, list: [] };
+        
+        const slot = document.createElement('div');
+        slot.className = 'day-slot';
+        
+        let lvl = '';
+        if(day.score > 20) lvl = 'lvl-4';
+        else if(day.score > 10) lvl = 'lvl-3';
+        else if(day.score > 0) lvl = 'lvl-2';
+        
+        slot.innerHTML = `<div class="chip ${lvl}"></div><span style="font-size:12px;color:#777;">${i}</span>`;
+        slot.onclick = () => showLog(k, day.list);
+        cal.appendChild(slot);
+      }
     }
 
-    function getNotes() { return JSON.parse(localStorage.getItem('board_stickies') || '[]'); }
-    function saveNotes(notes) { localStorage.setItem('board_stickies', JSON.stringify(notes)); renderStickies(); }
-
-    function renderStickies() {
-      const box = document.getElementById('sticky-container'); box.innerHTML = '';
-      getNotes().forEach(note => {
-        const el = document.createElement('div');
-        el.className = `sticky-note ${note.size}`;
-        el.style.backgroundColor = note.color;
-        el.style.setProperty('--rot', `${note.rot}deg`);
-        el.innerHTML = `<div class="sticky-text">${note.text}</div><button class="sticky-del" onclick="deleteNote(${note.id})">×</button>`;
-        box.appendChild(el);
-      });
+    function showLog(date, list) {
+      document.getElementById('sel-date').innerText = date;
+      const logs = document.getElementById('logs');
+      if(list.length === 0) { logs.innerHTML = '<p style="color:#aaa;">No study records.</p>'; return; }
+      logs.innerHTML = list.map(l => `<div class="log-line"><span>${l}</span> <span>+5</span></div>`).join('');
     }
 
-    function addStickyNote() {
-      const text = document.getElementById('sticky-text-in').value.trim();
-      if (!text) return;
-      const notes = getNotes();
-      notes.push({ id: Date.now(), text, color: selectedColor, size: document.getElementById('sticky-size-in').value, rot: (Math.random() * 6 - 3).toFixed(1) });
-      saveNotes(notes);
-      document.getElementById('sticky-text-in').value = '';
-      closeModal('sticky-modal');
-    }
-
-    function deleteNote(id) { saveNotes(getNotes().filter(n => n.id !== id)); }
-    function openStickyModal() { document.getElementById('sticky-modal').style.display = 'block'; }
-    function openSettingModal() { document.getElementById('setting-modal').style.display = 'block'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function changeBackground(url) { document.documentElement.style.setProperty('--bg-theme', `url('${url}')`); localStorage.setItem('bg_theme', url); }
-
-    window.onload = () => {
-      initColorChips();
-      const savedBg = localStorage.getItem('bg_theme');
-      if (savedBg) changeBackground(savedBg);
-      renderStickies();
-    };
+    window.onload = renderCal;
   </script>
 </body>
 </html>
