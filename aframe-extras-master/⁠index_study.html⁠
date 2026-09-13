@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aesthetic Study Board</title>
+  <title>Focus & Goal Board</title>
   <style>
     :root {
       --bg-theme: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80');
@@ -13,17 +13,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       width: 100vw; height: 100vh; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Playfair Display", "Times New Roman", serif;
       background-image: var(--bg-theme);
       background-size: cover; background-position: center;
       display: flex; justify-content: center; align-items: center;
       transition: background-image 0.4s ease;
     }
 
+    /* 리얼 월넛 도마/보드 */
     .wood-board {
       position: relative;
-      width: 86vw; max-width: 950px;
-      height: 76vh; max-height: 650px;
+      width: 88vw; max-width: 980px;
+      height: 78vh; max-height: 670px;
       background: linear-gradient(115deg, #4a2810 0%, #6e3d1b 25%, #46250e 45%, #7a4621 70%, #3e1f0b 100%);
       border-radius: 28px;
       box-shadow: 
@@ -48,8 +49,8 @@
       display: flex; justify-content: space-between; align-items: center;
     }
     .board-title {
-      color: rgba(245, 235, 224, 0.7);
-      font-size: 14px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+      color: rgba(245, 235, 224, 0.75);
+      font-size: 15px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
     }
     .btn-add-sticky {
       background: rgba(255,255,255,0.18); color: #fff;
@@ -80,16 +81,17 @@
     .size-md { width: 170px; min-height: 150px; font-size: 14px; }
     .size-lg { width: 220px; min-height: 190px; font-size: 15px; }
 
-    .sticky-text { white-space: pre-wrap; word-break: break-word; line-height: 1.45; }
+    .sticky-text { white-space: pre-wrap; word-break: break-word; line-height: 1.45; font-family: -apple-system, sans-serif; }
     .sticky-del {
       align-self: flex-end; background: none; border: none; font-size: 18px;
       color: rgba(0,0,0,0.35); cursor: pointer; padding: 2px; transition: color 0.2s;
     }
     .sticky-del:hover { color: #b91c1c; }
 
+    /* 하단 독 네비게이션 */
     .bottom-dock {
       position: fixed; bottom: 20px;
-      background: rgba(35, 25, 20, 0.75); backdrop-filter: blur(14px);
+      background: rgba(35, 25, 20, 0.78); backdrop-filter: blur(14px);
       border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
       display: flex; gap: 8px; padding: 8px 14px;
       box-shadow: 0 15px 35px rgba(0,0,0,0.35); z-index: 100;
@@ -98,7 +100,7 @@
       padding: 9px 16px; border-radius: 16px;
       color: #e5e5e5; text-decoration: none; font-size: 13px; font-weight: 500;
       display: flex; align-items: center; gap: 6px; border: none; background: transparent; cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s; font-family: -apple-system, sans-serif;
     }
     .dock-btn:hover, .dock-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
 
@@ -116,7 +118,7 @@
     .color-chip.selected { border-color: #3e2723; transform: scale(1.15); }
     textarea, select {
       width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px;
-      font-size: 14px; outline: none; margin-bottom: 12px;
+      font-size: 14px; outline: none; margin-bottom: 12px; font-family: -apple-system, sans-serif;
     }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .btn-submit { background: #5c3a21; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
@@ -133,6 +135,7 @@
     <div class="sticky-container" id="sticky-container"></div>
   </div>
 
+  <!-- 하단 독 네비게이션 -->
   <div class="bottom-dock">
     <a href="index_study.html" class="dock-btn active">📌 Board</a>
     <a href="grass.html" class="dock-btn">🌿 Archives</a>
@@ -141,14 +144,15 @@
     <button class="dock-btn" onclick="openSettingModal()">⚙️ Theme</button>
   </div>
 
+  <!-- 포스트잇 추가 모달 -->
   <div id="sticky-modal" class="modal">
     <h3>New Sticky Note</h3>
     <textarea id="sticky-text-in" rows="4" placeholder="Record goal or note..."></textarea>
     
-    <label style="font-size: 13px; color: #64748b;">Palette:</label>
+    <label style="font-size: 13px; color: #64748b; font-family: -apple-system, sans-serif;">Palette:</label>
     <div class="color-picker" id="color-chips"></div>
 
-    <label style="font-size: 13px; color: #64748b;">Size:</label>
+    <label style="font-size: 13px; color: #64748b; font-family: -apple-system, sans-serif;">Size:</label>
     <select id="sticky-size-in">
       <option value="size-sm">Small</option>
       <option value="size-md" selected>Medium</option>
@@ -161,6 +165,7 @@
     </div>
   </div>
 
+  <!-- 배경 테마 설정 모달 -->
   <div id="setting-modal" class="modal">
     <h3>Background Theme</h3>
     <select id="bg-select" onchange="changeBackground(this.value)">
