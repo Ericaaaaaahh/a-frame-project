@@ -4,12 +4,10 @@
   <meta charset="UTF-8">
   <title>Archive of Classics</title>
   <link rel="stylesheet" href="style.css">
-  <!-- 고급스러운 영어 필기체 폰트 불러오기 -->
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- 네이비/회색 톤의 상단 메뉴바 -->
   <nav class="navbar">
     <div class="nav-left">
       <div class="icon-btn">🏠</div>
@@ -25,64 +23,66 @@
     </div>
   </nav>
 
-  <!-- 3D 벽돌 거리 무대 -->
   <main class="street-view">
-    <!-- 흑색 바닥 -->
     <div class="floor"></div>
 
-    <!-- 따뜻한 벽돌 벽면 컨테이너 -->
     <div class="brick-wall">
       
       <!-- 갤러리 1 (빈 자리) -->
       <div class="gallery-slot empty"></div>
 
-      <!-- 가로등 -->
       <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
       <!-- 갤러리 2 (빈 자리) -->
       <div class="gallery-slot empty"></div>
 
-      <!-- 가로등 -->
       <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-      <!-- ★ 갤러리 3 (이상한 나라의 앨리스 - 메인 와인색 문) -->
+      <!-- ★ 갤러리 3 (이상한 나라의 앨리스 - 와인색 문) -->
       <div class="gallery-slot active">
-        <!-- 문틀 (돌/나무 프레임 느낌) -->
         <div class="door-frame">
           <div class="door-void">Enter the Gallery ➔</div>
-          
-          <!-- 클릭 시 gallery.html로 이동하는 실제 문 -->
           <a href="gallery.html" class="door-body">
-            <!-- 문의 패널 구조 (사진 참고) -->
             <div class="panel top-arch-panel"></div>
-            
-            <!-- 앨리스 필기체 텍스트 -->
             <div class="door-title">Alice in Wonderland</div>
-            
             <div class="panel-row">
               <div class="panel mid-panel"></div>
               <div class="panel mid-panel"></div>
             </div>
-            
             <div class="panel-row">
               <div class="panel bot-panel"></div>
               <div class="panel bot-panel"></div>
             </div>
-
-            <!-- 문고리와 장식 -->
             <div class="door-knob"></div>
             <div class="door-knocker"></div>
           </a>
         </div>
       </div>
 
-      <!-- 가로등 -->
       <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
-      <!-- 갤러리 4 (빈 자리) -->
-      <div class="gallery-slot empty"></div>
+      <!-- ★ 갤러리 4 (셜록 홈즈 - 네이비색 문 추가!) -->
+      <div class="gallery-slot active">
+        <div class="door-frame">
+          <div class="door-void">Enter the Gallery ➔</div>
+          <!-- gallery2.html 로 연결됩니다 -->
+          <a href="gallery2.html" class="door-body" style="background: #1e293b;">
+            <div class="panel top-arch-panel" style="background: #0f172a;"></div>
+            <div class="door-title" style="color: #cbd5e1; font-size: 28px;">Sherlock Holmes</div>
+            <div class="panel-row">
+              <div class="panel mid-panel" style="background: #0f172a;"></div>
+              <div class="panel mid-panel" style="background: #0f172a;"></div>
+            </div>
+            <div class="panel-row">
+              <div class="panel bot-panel" style="background: #0f172a;"></div>
+              <div class="panel bot-panel" style="background: #0f172a;"></div>
+            </div>
+            <div class="door-knob" style="background: #cbd5e1;"></div>
+            <div class="door-knocker" style="border-color: #cbd5e1;"></div>
+          </a>
+        </div>
+      </div>
 
-      <!-- 가로등 -->
       <div class="lantern-wrapper"><div class="lantern-glow"></div><div class="lantern-body"></div></div>
 
       <!-- 갤러리 5 (빈 자리) -->
