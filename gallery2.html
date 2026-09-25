@@ -5,6 +5,7 @@
   <title>Sherlock Holmes - Shattered Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
+    /* 산산조각(Shatter) 버튼 */
     #shatterBtn {
       position: absolute; bottom: 30px; right: 30px; z-index: 1000;
       width: 85px; height: 85px; background: rgba(139, 0, 0, 0.2);
@@ -13,16 +14,16 @@
       backdrop-filter: blur(4px); transition: 0.2s; text-align: center;
       box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
     }
-    #shatterBtn:active { background: rgba(139, 0, 0, 0.5); transform: scale(0.95); }
+    #shatterBtn:active { background: rgba(139, 0, 0, 0.6); transform: scale(0.9); }
     
     .back-btn-container { position: absolute; top: 20px; left: 20px; z-index: 1000; }
     .back-btn { 
-      display: inline-block; padding: 10px 16px; color: #444; text-decoration: none; 
+      display: inline-block; padding: 10px 16px; color: #aaa; text-decoration: none; 
       font-size: 13px; font-family: 'Georgia', serif; font-weight: bold;
-      background: rgba(255, 255, 255, 0.7); border: 1px solid #aaa; 
+      background: rgba(15, 15, 15, 0.8); border: 1px solid #333; 
       border-radius: 6px; backdrop-filter: blur(5px); transition: 0.2s;
     }
-    .back-btn:hover { background: #eee; color: #000; }
+    .back-btn:hover { background: #222; color: #fff; }
   </style>
 
   <script>
@@ -66,21 +67,20 @@
 
   <button id="shatterBtn">BREAK<br>(Space)</button>
 
-  <!-- ★ 런던의 안개 낀 회색 새벽거리 느낌으로 배경 변경 -->
-  <a-scene fog="type: linear; color: #a3aab0; near: 2; far: 18">
-    <a-sky color="#a3aab0"></a-sky>
-    <!-- 아스팔트/자갈길 느낌의 진회색 바닥 -->
-    <a-plane position="0 0 -400" rotation="-90 0 0" width="15" height="1000" color="#5c666f" material="roughness: 1"></a-plane>
+  <!-- ★ 붉은 안개와 덜 어두운 탁한 회색 배경 -->
+  <a-scene fog="type: linear; color: #4a1111; near: 2; far: 18">
+    <a-sky color="#2a2a30"></a-sky> <!-- 약간 밝은 탁한 짙은 회색 -->
+    <a-plane position="0 0 -400" rotation="-90 0 0" width="15" height="1000" color="#1a1a1a" material="roughness: 1"></a-plane>
     
-    <!-- 전체를 밝혀주는 기본 조명 강도 증가 -->
-    <a-light type="ambient" color="#ffffff" intensity="0.65"></a-light>
+    <!-- ★ 공간 전체를 밝히는 조명은 거의 꺼버림 (어둡게) -->
+    <a-light type="ambient" color="#111111" intensity="0.3"></a-light>
     
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- ★ 카메라 조명: 19세기 가스등 느낌의 따뜻한 주황빛으로 변경 -->
+    <!-- ★ 가스등 느낌 조명: 내 앞쪽만 밝히는 따뜻한 오렌지/주황빛 -->
     <a-camera id="player" position="0 1.6 4" look-controls="magicWindowTrackingEnabled: false" wasd-controls="acceleration: 45" wall-collider>
       <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
-      <a-light type="point" color="#ffcc99" intensity="0.9" distance="9" position="0 0 0"></a-light>
+      <a-light type="point" color="#ffaa55" intensity="1.8" distance="12" position="0 1.5 0" decay="1.5"></a-light>
     </a-camera>
   </a-scene>
 
@@ -224,12 +224,14 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
         wallGroup.setAttribute('class', 'door-wall-group');
         wallGroup.dataset.shattered = "false"; 
 
-        // ★ 안개 속에서 눈에 띄는 붉은 구운 벽돌색으로 변경
+        // ★ 어두운 진갈색/회색 톤의 진짜 벽돌 무늬 적용!
         const wall = document.createElement('a-box');
         wall.setAttribute('width', '6.0');
         wall.setAttribute('height', '3.5');
         wall.setAttribute('depth', '0.2');
-        wall.setAttribute('color', '#6b3229');
+        wall.setAttribute('color', '#3c3029'); // 진한 갈회색으로 틴트
+        wall.setAttribute('src', 'https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/bricks/brick_diffuse.jpg');
+        wall.setAttribute('repeat', '3 2'); // 벽돌 무늬 반복
         wall.setAttribute('material', 'roughness: 0.9');
         wall.setAttribute('class', 'solid-wall');
 
@@ -276,29 +278,34 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
         if(box) box.setAttribute('visible', 'false');
         if(txt) txt.setAttribute('visible', 'false');
 
-        for(let j=0; j<6; j++) {
+        // ★ 파편 개수를 20개로 늘리고 크기를 자잘하게 변경!
+        for(let j=0; j<20; j++) {
           const fragment = document.createElement('a-box');
-          const fWidth = 1.5 + Math.random() * 2;
-          const fHeight = 1 + Math.random() * 1.5;
+          // 아주 작고 불규칙한 파편 크기
+          const fWidth = 0.4 + Math.random() * 1.2;
+          const fHeight = 0.3 + Math.random() * 1.0;
           fragment.setAttribute('width', fWidth.toString());
           fragment.setAttribute('height', fHeight.toString());
           fragment.setAttribute('depth', '0.2');
-          // 파편도 벽과 동일한 벽돌색으로 맞춤
-          fragment.setAttribute('color', '#6b3229'); 
+          fragment.setAttribute('color', '#3c3029'); // 파편도 벽돌 톤 유지
+          fragment.setAttribute('src', 'https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/bricks/brick_diffuse.jpg');
           
-          const startX = (Math.random() - 0.5) * 4;
-          const startY = (Math.random() - 0.5) * 2;
+          // 파편들의 시작 위치를 6x3.5 벽 전체에 흩뿌리기
+          const startX = (Math.random() - 0.5) * 5.5;
+          const startY = (Math.random() - 0.5) * 3.0;
           fragment.setAttribute('position', `${startX} ${startY} 0`);
 
-          const endX = startX + (Math.random() - 0.5) * 4; 
-          const endY = -1.6; 
-          const endZ = (Math.random() - 0.5) * 3; 
+          // 바닥으로 떨어지며 사방으로 흩어지는 위치
+          const endX = startX + (Math.random() - 0.5) * 5.0; 
+          const endY = -1.6; // 거의 바닥
+          const endZ = (Math.random() - 0.5) * 4.0; 
 
           const rotX = Math.random() * 360;
           const rotY = Math.random() * 360;
           const rotZ = Math.random() * 360;
 
-          fragment.setAttribute('animation__pos', `property: position; to: ${endX} ${endY} ${endZ}; dur: ${600 + Math.random()*400}; easing: easeInQuad`);
+          // 20개의 조각이 다 다른 속도로 와장창 떨어지도록 애니메이션 설정
+          fragment.setAttribute('animation__pos', `property: position; to: ${endX} ${endY} ${endZ}; dur: ${500 + Math.random()*500}; easing: easeInQuad`);
           fragment.setAttribute('animation__rot', `property: rotation; to: ${rotX} ${rotY} ${rotZ}; dur: 800; easing: linear`);
 
           closestWall.appendChild(fragment);
