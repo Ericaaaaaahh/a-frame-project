@@ -5,7 +5,6 @@
   <title>Sherlock Holmes - Shattered Gallery</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <style>
-    /* 산산조각(Shatter) 버튼 */
     #shatterBtn {
       position: absolute; bottom: 30px; right: 30px; z-index: 1000;
       width: 85px; height: 85px; background: rgba(139, 0, 0, 0.2);
@@ -18,12 +17,12 @@
     
     .back-btn-container { position: absolute; top: 20px; left: 20px; z-index: 1000; }
     .back-btn { 
-      display: inline-block; padding: 10px 16px; color: #aaa; text-decoration: none; 
+      display: inline-block; padding: 10px 16px; color: #444; text-decoration: none; 
       font-size: 13px; font-family: 'Georgia', serif; font-weight: bold;
-      background: rgba(15, 15, 15, 0.8); border: 1px solid #333; 
+      background: rgba(255, 255, 255, 0.7); border: 1px solid #aaa; 
       border-radius: 6px; backdrop-filter: blur(5px); transition: 0.2s;
     }
-    .back-btn:hover { background: #222; color: #fff; }
+    .back-btn:hover { background: #eee; color: #000; }
   </style>
 
   <script>
@@ -67,16 +66,21 @@
 
   <button id="shatterBtn">BREAK<br>(Space)</button>
 
-  <a-scene fog="type: linear; color: #1a0505; near: 2; far: 18">
-    <a-sky color="#0a0202"></a-sky>
-    <a-plane position="0 0 -400" rotation="-90 0 0" width="15" height="1000" color="#0d0d0d" material="roughness: 1"></a-plane>
+  <!-- ★ 런던의 안개 낀 회색 새벽거리 느낌으로 배경 변경 -->
+  <a-scene fog="type: linear; color: #a3aab0; near: 2; far: 18">
+    <a-sky color="#a3aab0"></a-sky>
+    <!-- 아스팔트/자갈길 느낌의 진회색 바닥 -->
+    <a-plane position="0 0 -400" rotation="-90 0 0" width="15" height="1000" color="#5c666f" material="roughness: 1"></a-plane>
+    
+    <!-- 전체를 밝혀주는 기본 조명 강도 증가 -->
+    <a-light type="ambient" color="#ffffff" intensity="0.65"></a-light>
     
     <a-entity id="gallery-container"></a-entity>
 
-    <!-- 은은하고 붉은 랜턴 조명 장착 -->
+    <!-- ★ 카메라 조명: 19세기 가스등 느낌의 따뜻한 주황빛으로 변경 -->
     <a-camera id="player" position="0 1.6 4" look-controls="magicWindowTrackingEnabled: false" wasd-controls="acceleration: 45" wall-collider>
-      <a-cursor color="#ff9999" scale="0.8 0.8 0.8"></a-cursor>
-      <a-light type="point" color="#ff7766" intensity="1.2" distance="8" position="0 0 0"></a-light>
+      <a-cursor color="#ffffff" scale="0.8 0.8 0.8"></a-cursor>
+      <a-light type="point" color="#ffcc99" intensity="0.9" distance="9" position="0 0 0"></a-light>
     </a-camera>
   </a-scene>
 
@@ -121,7 +125,6 @@
     }
 
     function buildLinearGallery() {
-      // ★ 전달해주신 셜록 홈즈 텍스트 박제 구역
       const exhibitionText = `IX.
 THE ADVENTURE OF THE ENGINEER’S THUMB
 
@@ -221,17 +224,15 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
         wallGroup.setAttribute('class', 'door-wall-group');
         wallGroup.dataset.shattered = "false"; 
 
-        // 진한 어두운 벽돌색 벽 (#2c1e1c)
+        // ★ 안개 속에서 눈에 띄는 붉은 구운 벽돌색으로 변경
         const wall = document.createElement('a-box');
         wall.setAttribute('width', '6.0');
         wall.setAttribute('height', '3.5');
         wall.setAttribute('depth', '0.2');
-        wall.setAttribute('color', '#2c1e1c');
-        wall.setAttribute('material', 'roughness: 1');
+        wall.setAttribute('color', '#6b3229');
+        wall.setAttribute('material', 'roughness: 0.9');
         wall.setAttribute('class', 'solid-wall');
-        wall.setAttribute('id', `wall-box-${i}`);
 
-        // 대비를 이루는 선명한 흰색 텍스트
         const textEl = document.createElement('a-text');
         textEl.setAttribute('value', chunk);
         textEl.setAttribute('align', 'center');
@@ -239,7 +240,6 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
         textEl.setAttribute('wrap-count', '35');
         textEl.setAttribute('position', `0 0 0.12`);
         textEl.setAttribute('color', '#ffffff'); 
-        textEl.setAttribute('id', `wall-text-${i}`);
 
         wallGroup.appendChild(wall);
         wallGroup.appendChild(textEl);
@@ -247,7 +247,6 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
       });
     }
 
-    // ★ 벽을 6조각으로 산산조각 내는 함수
     function shatterClosestWall() {
       const playerPos = document.getElementById('player').object3D.position;
       const walls = document.querySelectorAll('.door-wall-group');
@@ -277,7 +276,6 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
         if(box) box.setAttribute('visible', 'false');
         if(txt) txt.setAttribute('visible', 'false');
 
-        // 파편 조각 생성
         for(let j=0; j<6; j++) {
           const fragment = document.createElement('a-box');
           const fWidth = 1.5 + Math.random() * 2;
@@ -285,7 +283,8 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
           fragment.setAttribute('width', fWidth.toString());
           fragment.setAttribute('height', fHeight.toString());
           fragment.setAttribute('depth', '0.2');
-          fragment.setAttribute('color', '#2c1e1c'); 
+          // 파편도 벽과 동일한 벽돌색으로 맞춤
+          fragment.setAttribute('color', '#6b3229'); 
           
           const startX = (Math.random() - 0.5) * 4;
           const startY = (Math.random() - 0.5) * 2;
@@ -307,7 +306,6 @@ Holmes sat in his big armchair with the weary, heavy-lidded expression which vei
       }
     }
 
-    // Spacebar 또는 우측 하단 화면 버튼 입력 감지
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault(); 
